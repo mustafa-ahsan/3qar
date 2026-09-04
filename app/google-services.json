@@ -1,0 +1,40 @@
+{
+  "project_info": {
+    "project_number": "868667822917",
+    "firebase_url": "https://youtube-tele-387411-default-rtdb.firebaseio.com",
+    "project_id": "youtube-tele-387411",
+    "storage_bucket": "youtube-tele-387411.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:868667822917:android:0627c217adcbdeb0b4642c",
+        "android_client_info": {
+          "package_name": "com.delilaqar.realestate"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "868667822917-1at50efjjkq56ii83gpat7799c1c5g66.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCWlw__3ouG6ftWTxLJTRF-RyGfh7fawUY"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "868667822917-1at50efjjkq56ii83gpat7799c1c5g66.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
