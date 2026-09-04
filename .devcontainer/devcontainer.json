@@ -1,0 +1,13 @@
+{
+  "name": "Aqar Android Dev",
+  "image": "mcr.microsoft.com/devcontainers/java:1-17-bullseye",
+  "postCreateCommand": "chmod +x .devcontainer/setup-android-sdk.sh && .devcontainer/setup-android-sdk.sh",
+  "customizations": {
+    "vscode": {
+      "extensions": [
+        "vscjava.vscode-java-pack",
+        "redhat.java"
+      ]
+    }
+  }
+}
