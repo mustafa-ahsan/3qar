@@ -1,9 +1,27 @@
 <resources>
     <string name="app_name">عقار</string>
     <string name="welcome_message">مرحباً بك في تطبيق عقار 🏠</string>
+
     <string name="nav_home">الرئيسية</string>
     <string name="nav_search">البحث</string>
     <string name="nav_post_ad">نشر إعلان</string>
     <string name="nav_favorites">المفضلة</string>
     <string name="nav_profile">حسابي</string>
+
+    <string name="details_button">تفاصيل العقار</string>
+    <string name="whatsapp_button">واتساب</string>
+    <string name="property_image_desc">صورة العقار</string>
+
+    <string name="badge_sale">للبيع</string>
+    <string name="badge_rent">للإيجار</string>
+
+    <string name="type_apartment">شقة</string>
+    <string name="type_villa">فيلا</string>
+    <string name="type_land">أرض</string>
+    <string name="type_commercial">تجاري ومكاتب</string>
+    <string name="type_duplex">دوبلكس</string>
+    <string name="type_chalet">شاليه</string>
+    <string name="type_building">عمارة كاملة</string>
+
+    <string name="empty_properties">لا توجد عقارات متاحة حالياً</string>
 </resources>
