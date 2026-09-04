@@ -1,4 +1,9 @@
 <resources>
     <string name="app_name">عقار</string>
     <string name="welcome_message">مرحباً بك في تطبيق عقار 🏠</string>
+    <string name="nav_home">الرئيسية</string>
+    <string name="nav_search">البحث</string>
+    <string name="nav_post_ad">نشر إعلان</string>
+    <string name="nav_favorites">المفضلة</string>
+    <string name="nav_profile">حسابي</string>
 </resources>
