@@ -9,6 +9,7 @@ import androidx.navigation.NavOptions
 import androidx.navigation.fragment.findNavController
 import com.delilaqar.realestate.R
 import com.delilaqar.realestate.databinding.FragmentFavoritesBinding
+import com.delilaqar.realestate.util.navigateSafe
 import com.google.firebase.auth.FirebaseAuth
 
 class FavoritesFragment : Fragment() {
@@ -26,7 +27,7 @@ class FavoritesFragment : Fragment() {
         super.onViewCreated(view, savedInstanceState)
 
         if (FirebaseAuth.getInstance().currentUser == null) {
-            findNavController().navigate(
+            findNavController().navigateSafe(
                 R.id.loginFragment,
                 null,
                 NavOptions.Builder().setPopUpTo(R.id.favoritesFragment, true).build()

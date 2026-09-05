@@ -8,6 +8,8 @@ import androidx.fragment.app.Fragment
 import androidx.navigation.fragment.findNavController
 import com.delilaqar.realestate.R
 import com.delilaqar.realestate.databinding.FragmentLoginBinding
+import com.delilaqar.realestate.util.navigateSafe
+import com.delilaqar.realestate.util.setOnSingleClickListener
 import com.google.firebase.auth.FirebaseAuth
 
 class LoginFragment : Fragment() {
@@ -24,10 +26,9 @@ class LoginFragment : Fragment() {
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
-
-        binding.loginButton.setOnClickListener { attemptLogin() }
-        binding.goToRegisterText.setOnClickListener {
-            findNavController().navigate(R.id.action_login_to_register)
+        binding.loginButton.setOnSingleClickListener { attemptLogin() }
+        binding.goToRegisterText.setOnSingleClickListener {
+            findNavController().navigateSafe(R.id.action_login_to_register)
         }
     }
 
@@ -40,12 +41,19 @@ class LoginFragment : Fragment() {
             return
         }
 
+        binding.loginButton.isEnabled = false
+
         auth.signInWithEmailAndPassword(email, password)
             .addOnSuccessListener {
-                findNavController().navigate(R.id.action_login_to_home)
+                if (isAdded && _binding != null) {
+                    findNavController().navigateSafe(R.id.action_login_to_home)
+                }
             }
             .addOnFailureListener { e ->
-                showError("فشل تسجيل الدخول: ${e.message}")
+                if (_binding != null) {
+                    showError("فشل تسجيل الدخول: ${e.message}")
+                    binding.loginButton.isEnabled = true
+                }
             }
     }
 

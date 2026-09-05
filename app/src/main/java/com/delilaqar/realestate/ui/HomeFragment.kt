@@ -30,10 +30,10 @@ class HomeFragment : Fragment() {
         adapter = PropertyAdapter(
             items = emptyList(),
             onDetailsClick = {
-                Toast.makeText(requireContext(), "شاشة التفاصيل قريباً", Toast.LENGTH_SHORT).show()
+                if (isAdded) Toast.makeText(requireContext(), "شاشة التفاصيل قريباً", Toast.LENGTH_SHORT).show()
             },
             onWhatsappClick = {
-                Toast.makeText(requireContext(), "التواصل عبر واتساب قريباً", Toast.LENGTH_SHORT).show()
+                if (isAdded) Toast.makeText(requireContext(), "التواصل عبر واتساب قريباً", Toast.LENGTH_SHORT).show()
             }
         )
         binding.propertiesRecyclerView.layoutManager = LinearLayoutManager(requireContext())
@@ -47,6 +47,7 @@ class HomeFragment : Fragment() {
             .whereEqualTo("status", "active")
             .get()
             .addOnSuccessListener { snapshot ->
+                if (_binding == null) return@addOnSuccessListener
                 val properties = snapshot.documents.mapNotNull { doc ->
                     doc.toObject(Property::class.java)?.apply { id = doc.id }
                 }
@@ -54,6 +55,7 @@ class HomeFragment : Fragment() {
                 binding.emptyText.visibility = if (properties.isEmpty()) View.VISIBLE else View.GONE
             }
             .addOnFailureListener {
+                if (_binding == null) return@addOnFailureListener
                 binding.emptyText.visibility = View.VISIBLE
                 binding.emptyText.text = "فشل تحميل العقارات: ${it.message}"
             }

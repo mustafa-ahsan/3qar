@@ -8,6 +8,8 @@ import androidx.fragment.app.Fragment
 import androidx.navigation.fragment.findNavController
 import com.delilaqar.realestate.R
 import com.delilaqar.realestate.databinding.FragmentRegisterBinding
+import com.delilaqar.realestate.util.navigateSafe
+import com.delilaqar.realestate.util.setOnSingleClickListener
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
 
@@ -26,11 +28,8 @@ class RegisterFragment : Fragment() {
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
-
-        binding.registerButton.setOnClickListener { attemptRegister() }
-        binding.goToLoginText.setOnClickListener {
-            findNavController().popBackStack()
-        }
+        binding.registerButton.setOnSingleClickListener { attemptRegister() }
+        binding.goToLoginText.setOnSingleClickListener { findNavController().popBackStack() }
     }
 
     private fun attemptRegister() {
@@ -48,9 +47,19 @@ class RegisterFragment : Fragment() {
             return
         }
 
+        binding.registerButton.isEnabled = false
+
         auth.createUserWithEmailAndPassword(email, password)
             .addOnSuccessListener { result ->
-                val uid = result.user!!.uid
+                val uid = result.user?.uid
+                if (uid == null) {
+                    if (_binding != null) {
+                        showError("حدث خطأ غير متوقع، حاول مرة أخرى")
+                        binding.registerButton.isEnabled = true
+                    }
+                    return@addOnSuccessListener
+                }
+
                 val userData = hashMapOf(
                     "uid" to uid,
                     "name" to name,
@@ -61,14 +70,22 @@ class RegisterFragment : Fragment() {
                 )
                 db.collection("users").document(uid).set(userData)
                     .addOnSuccessListener {
-                        findNavController().navigate(R.id.action_register_to_home)
+                        if (isAdded && _binding != null) {
+                            findNavController().navigateSafe(R.id.action_register_to_home)
+                        }
                     }
                     .addOnFailureListener { e ->
-                        showError("تم إنشاء الحساب لكن فشل حفظ البيانات: ${e.message}")
+                        if (_binding != null) {
+                            showError("تم إنشاء الحساب لكن فشل حفظ البيانات: ${e.message}")
+                            binding.registerButton.isEnabled = true
+                        }
                     }
             }
             .addOnFailureListener { e ->
-                showError("فشل إنشاء الحساب: ${e.message}")
+                if (_binding != null) {
+                    showError("فشل إنشاء الحساب: ${e.message}")
+                    binding.registerButton.isEnabled = true
+                }
             }
     }
 
