@@ -46,11 +46,15 @@
 
             <TextView
                 android:id="@+id/propertyTypeBadge"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
                 style="@style/BadgeDark"
                 android:layout_marginEnd="6dp" />
 
             <TextView
                 android:id="@+id/listingTypeBadge"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
                 style="@style/BadgeColored" />
         </LinearLayout>
 
