@@ -62,4 +62,14 @@
             app:popUpToInclusive="true" />
     </fragment>
 
+    <fragment
+        android:id="@+id/propertyDetailFragment"
+        android:name="com.delilaqar.realestate.ui.PropertyDetailFragment"
+        android:label="تفاصيل العقار"
+        tools:layout="@layout/fragment_property_detail">
+        <argument
+            android:name="propertyId"
+            app:argType="string" />
+    </fragment>
+
 </navigation>

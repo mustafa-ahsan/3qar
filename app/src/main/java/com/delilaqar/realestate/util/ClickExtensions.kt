@@ -21,13 +21,21 @@ fun View.setOnSingleClickListener(debounceMillis: Long = 800L, action: (View) ->
 }
 
 /**
- * Safe wrapper around NavController.navigate that swallows the exception thrown
+ * Safe wrappers around NavController.navigate that swallow the exception thrown
  * when navigate() is called twice in quick succession or from an invalid state,
  * instead of crashing the app.
  */
 fun NavController.navigateSafe(actionId: Int) {
     try {
         navigate(actionId)
+    } catch (e: Exception) {
+        // Ignored: caused by rapid repeated navigation attempts.
+    }
+}
+
+fun NavController.navigateSafe(actionId: Int, args: Bundle?) {
+    try {
+        navigate(actionId, args)
     } catch (e: Exception) {
         // Ignored: caused by rapid repeated navigation attempts.
     }

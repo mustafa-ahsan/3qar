@@ -6,9 +6,12 @@ import android.view.View
 import android.view.ViewGroup
 import android.widget.Toast
 import androidx.fragment.app.Fragment
+import androidx.navigation.fragment.findNavController
 import androidx.recyclerview.widget.LinearLayoutManager
+import com.delilaqar.realestate.R
 import com.delilaqar.realestate.data.Property
 import com.delilaqar.realestate.databinding.FragmentHomeBinding
+import com.delilaqar.realestate.util.navigateSafe
 import com.google.firebase.firestore.FirebaseFirestore
 
 class HomeFragment : Fragment() {
@@ -29,8 +32,11 @@ class HomeFragment : Fragment() {
 
         adapter = PropertyAdapter(
             items = emptyList(),
-            onDetailsClick = {
-                if (isAdded) Toast.makeText(requireContext(), "شاشة التفاصيل قريباً", Toast.LENGTH_SHORT).show()
+            onDetailsClick = { property ->
+                if (isAdded) {
+                    val bundle = Bundle().apply { putString("propertyId", property.id) }
+                    findNavController().navigateSafe(R.id.propertyDetailFragment, bundle)
+                }
             },
             onWhatsappClick = {
                 if (isAdded) Toast.makeText(requireContext(), "التواصل عبر واتساب قريباً", Toast.LENGTH_SHORT).show()

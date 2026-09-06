@@ -22,11 +22,10 @@ class MainActivity : AppCompatActivity() {
         binding.bottomNav.setupWithNavController(navController)
 
         navController.addOnDestinationChangedListener { _, destination, _ ->
-            binding.bottomNav.visibility =
-                if (destination.id == R.id.loginFragment || destination.id == R.id.registerFragment)
-                    View.GONE
-                else
-                    View.VISIBLE
+            val hideBottomNav = destination.id == R.id.loginFragment ||
+                destination.id == R.id.registerFragment ||
+                destination.id == R.id.propertyDetailFragment
+            binding.bottomNav.visibility = if (hideBottomNav) View.GONE else View.VISIBLE
         }
     }
 }

@@ -3,6 +3,7 @@ package com.delilaqar.realestate.data
 data class Property(
     var id: String = "",
     var title: String = "",
+    var description: String = "",
     var price: Double = 0.0,
     var currency: String = "USD",
     var listingType: String = "",
