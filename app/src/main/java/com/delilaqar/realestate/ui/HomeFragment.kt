@@ -30,6 +30,8 @@ class HomeFragment : Fragment() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
+        binding.propertiesRecyclerView.layoutDirection = View.LAYOUT_DIRECTION_RTL
+
         adapter = PropertyAdapter(
             items = emptyList(),
             onDetailsClick = { property ->
@@ -42,7 +44,8 @@ class HomeFragment : Fragment() {
                 if (isAdded) Toast.makeText(requireContext(), "التواصل عبر واتساب قريباً", Toast.LENGTH_SHORT).show()
             }
         )
-        binding.propertiesRecyclerView.layoutManager = LinearLayoutManager(requireContext())
+        val layoutManager = LinearLayoutManager(requireContext())
+        binding.propertiesRecyclerView.layoutManager = layoutManager
         binding.propertiesRecyclerView.adapter = adapter
 
         loadProperties()
