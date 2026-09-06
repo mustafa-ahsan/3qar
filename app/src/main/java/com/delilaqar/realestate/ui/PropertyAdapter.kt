@@ -32,6 +32,11 @@ class PropertyAdapter(
         val binding = holder.binding
         val context = binding.root.context
 
+        // Fade the card in instead of popping it in instantly — this hides the
+        // brief RTL layout correction behind a smooth, intentional animation.
+        binding.root.alpha = 0f
+        binding.root.animate().alpha(1f).setDuration(180).start()
+
         binding.titleText.text = property.title
         binding.priceText.text = "$${String.format(Locale.US, "%,.0f", property.price)}"
         binding.locationText.text = property.district
