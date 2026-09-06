@@ -14,7 +14,9 @@ import java.util.Locale
 class PropertyAdapter(
     private var items: List<Property>,
     private val onDetailsClick: (Property) -> Unit,
-    private val onWhatsappClick: (Property) -> Unit
+    private val onWhatsappClick: (Property) -> Unit,
+    private val onFavoriteClick: (Property) -> Unit,
+    private var favoriteIds: Set<String> = emptySet()
 ) : RecyclerView.Adapter<PropertyAdapter.PropertyViewHolder>() {
 
     inner class PropertyViewHolder(val binding: ItemPropertyBinding) :
@@ -32,8 +34,6 @@ class PropertyAdapter(
         val binding = holder.binding
         val context = binding.root.context
 
-        // Fade the card in instead of popping it in instantly — this hides the
-        // brief RTL layout correction behind a smooth, intentional animation.
         binding.root.alpha = 0f
         binding.root.animate().alpha(1f).setDuration(180).start()
 
@@ -55,6 +55,11 @@ class PropertyAdapter(
                 ColorStateList.valueOf(ContextCompat.getColor(context, R.color.primary_blue))
         }
 
+        val isFavorite = favoriteIds.contains(property.id)
+        binding.favoriteIcon.setImageResource(
+            if (isFavorite) R.drawable.ic_favorite else R.drawable.ic_favorite_outline
+        )
+
         val imageUrl = property.images.firstOrNull()
         if (imageUrl != null) {
             Glide.with(context).load(imageUrl).centerCrop().into(binding.propertyImage)
@@ -62,12 +67,18 @@ class PropertyAdapter(
 
         binding.detailsButton.setOnClickListener { onDetailsClick(property) }
         binding.whatsappButton.setOnClickListener { onWhatsappClick(property) }
+        binding.favoriteIcon.setOnClickListener { onFavoriteClick(property) }
     }
 
     override fun getItemCount(): Int = items.size
 
     fun updateData(newItems: List<Property>) {
         items = newItems
+        notifyDataSetChanged()
+    }
+
+    fun updateFavorites(newFavorites: Set<String>) {
+        favoriteIds = newFavorites
         notifyDataSetChanged()
     }
 

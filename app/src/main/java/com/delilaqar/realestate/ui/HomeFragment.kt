@@ -12,6 +12,7 @@ import com.delilaqar.realestate.R
 import com.delilaqar.realestate.data.Property
 import com.delilaqar.realestate.databinding.FragmentHomeBinding
 import com.delilaqar.realestate.util.navigateSafe
+import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
 
 class HomeFragment : Fragment() {
@@ -19,6 +20,7 @@ class HomeFragment : Fragment() {
     private val binding get() = _binding!!
     private val db = FirebaseFirestore.getInstance()
     private lateinit var adapter: PropertyAdapter
+    private val currentFavoriteIds = mutableSetOf<String>()
 
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?
@@ -42,13 +44,28 @@ class HomeFragment : Fragment() {
             },
             onWhatsappClick = {
                 if (isAdded) Toast.makeText(requireContext(), "التواصل عبر واتساب قريباً", Toast.LENGTH_SHORT).show()
-            }
+            },
+            onFavoriteClick = { property -> toggleFavorite(property) }
         )
-        val layoutManager = LinearLayoutManager(requireContext())
-        binding.propertiesRecyclerView.layoutManager = layoutManager
+        binding.propertiesRecyclerView.layoutManager = LinearLayoutManager(requireContext())
         binding.propertiesRecyclerView.adapter = adapter
 
-        loadProperties()
+        loadFavoriteIdsThenProperties()
+    }
+
+    private fun loadFavoriteIdsThenProperties() {
+        val uid = FirebaseAuth.getInstance().currentUser?.uid
+        if (uid == null) {
+            loadProperties()
+            return
+        }
+        db.collection("users").document(uid).collection("favorites").get()
+            .addOnSuccessListener { snapshot ->
+                currentFavoriteIds.clear()
+                currentFavoriteIds.addAll(snapshot.documents.map { it.id })
+                loadProperties()
+            }
+            .addOnFailureListener { loadProperties() }
     }
 
     private fun loadProperties() {
@@ -60,6 +77,7 @@ class HomeFragment : Fragment() {
                 val properties = snapshot.documents.mapNotNull { doc ->
                     doc.toObject(Property::class.java)?.apply { id = doc.id }
                 }
+                adapter.updateFavorites(currentFavoriteIds)
                 adapter.updateData(properties)
                 binding.emptyText.visibility = if (properties.isEmpty()) View.VISIBLE else View.GONE
             }
@@ -68,6 +86,31 @@ class HomeFragment : Fragment() {
                 binding.emptyText.visibility = View.VISIBLE
                 binding.emptyText.text = "فشل تحميل العقارات: ${it.message}"
             }
+    }
+
+    private fun toggleFavorite(property: Property) {
+        val uid = FirebaseAuth.getInstance().currentUser?.uid
+        if (uid == null) {
+            if (isAdded) {
+                Toast.makeText(requireContext(), "سجل الدخول أولاً لحفظ العقار بالمفضلة", Toast.LENGTH_SHORT).show()
+            }
+            return
+        }
+
+        val favRef = db.collection("users").document(uid).collection("favorites").document(property.id)
+
+        if (currentFavoriteIds.contains(property.id)) {
+            favRef.delete().addOnSuccessListener {
+                currentFavoriteIds.remove(property.id)
+                if (_binding != null) adapter.updateFavorites(currentFavoriteIds)
+            }
+        } else {
+            val data = mapOf("propertyId" to property.id, "addedAt" to System.currentTimeMillis())
+            favRef.set(data).addOnSuccessListener {
+                currentFavoriteIds.add(property.id)
+                if (_binding != null) adapter.updateFavorites(currentFavoriteIds)
+            }
+        }
     }
 
     override fun onDestroyView() {
