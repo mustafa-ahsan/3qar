@@ -6,7 +6,10 @@ import android.view.View
 import android.view.ViewGroup
 import android.widget.Toast
 import androidx.fragment.app.Fragment
+import androidx.navigation.fragment.findNavController
+import com.delilaqar.realestate.R
 import com.delilaqar.realestate.databinding.FragmentProfileBinding
+import com.delilaqar.realestate.util.navigateSafe
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
 
@@ -25,27 +28,49 @@ class ProfileFragment : Fragment() {
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
-        binding.seedButton.setOnClickListener { seedSampleData() }
+
+        val uid = auth.currentUser?.uid
+        if (uid == null) {
+            showLoggedOut()
+        } else {
+            showLoggedIn(uid)
+        }
     }
 
-    private fun seedSampleData() {
-        val email = "test@aqar.com"
-        val password = "Test123456"
+    private fun showLoggedOut() {
+        binding.loggedOutSection.visibility = View.VISIBLE
+        binding.loggedInSection.visibility = View.GONE
+        binding.goToLoginButton.setOnClickListener {
+            findNavController().navigateSafe(R.id.loginFragment)
+        }
+    }
 
-        auth.signInWithEmailAndPassword(email, password)
-            .addOnSuccessListener { result -> insertSampleProperties(result.user!!.uid) }
-            .addOnFailureListener {
-                auth.createUserWithEmailAndPassword(email, password)
-                    .addOnSuccessListener { result -> insertSampleProperties(result.user!!.uid) }
-                    .addOnFailureListener { e ->
-                        if (isAdded) {
-                            Toast.makeText(requireContext(), "فشل تسجيل الدخول: ${e.message}", Toast.LENGTH_LONG).show()
-                        }
-                    }
+    private fun showLoggedIn(uid: String) {
+        binding.loggedOutSection.visibility = View.GONE
+        binding.loggedInSection.visibility = View.VISIBLE
+
+        db.collection("users").document(uid).get()
+            .addOnSuccessListener { doc ->
+                if (_binding == null) return@addOnSuccessListener
+                val name = doc.getString("name") ?: "مستخدم"
+                val email = doc.getString("email") ?: ""
+                val phone = doc.getString("phone") ?: ""
+
+                binding.profileName.text = name
+                binding.profileEmail.text = email
+                binding.profilePhone.text = phone.ifEmpty { "لا يوجد رقم هاتف" }
+                binding.avatarText.text = name.firstOrNull()?.uppercase() ?: "?"
             }
+
+        binding.logoutButton.setOnClickListener {
+            auth.signOut()
+            showLoggedOut()
+        }
+
+        binding.seedButton.setOnClickListener { seedSampleData(uid) }
     }
 
-    private fun insertSampleProperties(ownerId: String) {
+    private fun seedSampleData(ownerId: String) {
         val samples = listOf(
             hashMapOf(
                 "title" to "شقة حديثة غرفتين وصالة للإيجار في الكرادة",
