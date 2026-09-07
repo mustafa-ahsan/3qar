@@ -238,6 +238,35 @@
                 android:inputType="number" />
         </com.google.android.material.textfield.TextInputLayout>
 
+        <!-- الإضافة الجديدة: زر اختيار الصورة ومعاينتها -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:layout_marginTop="8dp"
+            android:layout_marginBottom="16dp">
+
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/selectImageButton"
+                style="@style/Widget.MaterialComponents.Button.OutlinedButton"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="اختيار صورة للعقار (مطلوب)"
+                android:textColor="#2F8FFF"
+                app:strokeColor="#2F8FFF" />
+
+            <ImageView
+                android:id="@+id/imagePreview"
+                android:layout_width="match_parent"
+                android:layout_height="200dp"
+                android:layout_marginTop="8dp"
+                android:scaleType="centerCrop"
+                android:visibility="gone"
+                android:background="#161829"
+                android:contentDescription="معاينة الصورة" />
+        </LinearLayout>
+        <!-- نهاية الإضافة الجديدة -->
+
         <TextView
             android:id="@+id/errorText"
             android:layout_width="match_parent"
