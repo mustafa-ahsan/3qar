@@ -75,6 +75,8 @@ class PropertyDetailFragment : Fragment() {
         }
 
         // كود زر الإبلاغ الجديد
+        // كود زر الإبلاغ مع ميزة الإخفاء التلقائي
+        // كود زر الإبلاغ مع الاتصال المباشر بالسيرفر للتحقق من العدد الفعلي
         binding.reportButton.setOnClickListener {
             val uid = FirebaseAuth.getInstance().currentUser?.uid
             if (uid == null) {
@@ -82,21 +84,40 @@ class PropertyDetailFragment : Fragment() {
                 return@setOnClickListener
             }
 
-            // استخدام update، وإذا لم يكن الحقل موجوداً نقوم بإنشائه بـ mapOf لتجنب أي خطأ
-            val updates = hashMapOf<String, Any>(
-                "reportedBy" to com.google.firebase.firestore.FieldValue.arrayUnion(uid)
-            )
+            // نوقف الزر فوراً حتى لا يضغط عليه المستخدم مرتين بسرعة
+            binding.reportButton.isEnabled = false
+            binding.reportButton.text = "جاري الإبلاغ..."
 
-            db.collection("properties").document(propertyId)
-                .set(updates, com.google.firebase.firestore.SetOptions.merge())
-                .addOnSuccessListener {
-                    if (isAdded) Toast.makeText(requireContext(), "🚩 تم الإبلاغ عن الإعلان. سنقوم بمراجعته بأقرب وقت.", Toast.LENGTH_LONG).show()
-                    binding.reportButton.isEnabled = false
-                    binding.reportButton.text = "تم الإبلاغ"
+            val docRef = db.collection("properties").document(propertyId)
+
+            // 1. نجلب البيانات الطازجة من السيرفر مباشرة لحظة الضغط
+            docRef.get().addOnSuccessListener { document ->
+                // نقرأ مصفوفة البلاغات الحالية مباشرة من قاعدة البيانات
+                val currentReports = document.get("reportedBy") as? List<*>
+                val reportsCount = currentReports?.size ?: 0
+
+                val updates = hashMapOf<String, Any>(
+                    "reportedBy" to com.google.firebase.firestore.FieldValue.arrayUnion(uid)
+                )
+
+                // 2. إذا كان عدد البلاغات الفعلي في السيرفر 3 أو أكثر (يعني بلاغنا هذا هو الرابع أو أكثر)
+                if (reportsCount >= 3) {
+                    updates["status"] = "hidden"
                 }
-                .addOnFailureListener { e ->
-                    if (isAdded) Toast.makeText(requireContext(), "حدث خطأ: ${e.localizedMessage}", Toast.LENGTH_LONG).show()
-                }
+
+                // 3. نرسل التحديث
+                docRef.set(updates, com.google.firebase.firestore.SetOptions.merge())
+                    .addOnSuccessListener {
+                        if (isAdded) Toast.makeText(requireContext(), "🚩 تم استلام البلاغ.", Toast.LENGTH_LONG).show()
+                        binding.reportButton.text = "تم الإبلاغ"
+                    }
+                    .addOnFailureListener { e ->
+                        // في حال فشل الإرسال، نعيد تفعيل الزر
+                        binding.reportButton.isEnabled = true
+                        binding.reportButton.text = "🚩 إبلاغ عن محتوى مسيء"
+                        if (isAdded) Toast.makeText(requireContext(), "حدث خطأ: ${e.localizedMessage}", Toast.LENGTH_LONG).show()
+                    }
+            }
         }
     }
 

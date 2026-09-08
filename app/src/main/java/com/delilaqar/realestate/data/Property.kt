@@ -16,4 +16,5 @@ data class Property(
     var images: List<String> = emptyList(),
     var featured: Boolean = false,
     var status: String = "active"
+    var reportedBy: List<String> = emptyList()
 )
