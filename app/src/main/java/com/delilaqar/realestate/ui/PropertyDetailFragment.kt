@@ -10,6 +10,8 @@ import androidx.fragment.app.Fragment
 import com.bumptech.glide.Glide
 import com.delilaqar.realestate.data.Property
 import com.delilaqar.realestate.databinding.FragmentPropertyDetailBinding
+import com.google.firebase.auth.FirebaseAuth
+import com.google.firebase.firestore.FieldValue
 import com.google.firebase.firestore.FirebaseFirestore
 import java.util.Locale
 
@@ -36,14 +38,15 @@ class PropertyDetailFragment : Fragment() {
             .addOnSuccessListener { doc ->
                 if (_binding == null) return@addOnSuccessListener
                 val property = doc.toObject(Property::class.java) ?: return@addOnSuccessListener
-                bindProperty(property)
+                // تم التعديل هنا لتمرير الـ propertyId
+                bindProperty(propertyId, property)
             }
             .addOnFailureListener {
                 if (isAdded) Toast.makeText(requireContext(), "فشل تحميل العقار: ${it.message}", Toast.LENGTH_LONG).show()
             }
     }
 
-    private fun bindProperty(property: Property) {
+    private fun bindProperty(propertyId: String, property: Property) {
         binding.detailTitle.text = property.title
         binding.detailPrice.text = "$${String.format(Locale.US, "%,.0f", property.price)}"
         binding.detailLocation.text = property.district
@@ -69,6 +72,28 @@ class PropertyDetailFragment : Fragment() {
 
         binding.whatsappDetailButton.setOnClickListener {
             if (isAdded) Toast.makeText(requireContext(), "سيتوفر التواصل قريباً", Toast.LENGTH_SHORT).show()
+        }
+
+        // كود زر الإبلاغ الجديد
+        binding.reportButton.setOnClickListener {
+            val uid = FirebaseAuth.getInstance().currentUser?.uid
+            if (uid == null) {
+                Toast.makeText(requireContext(), "يجب تسجيل الدخول أولاً للإبلاغ", Toast.LENGTH_SHORT).show()
+                return@setOnClickListener
+            }
+
+            // arrayUnion تقوم بإضافة الـ uid للقائمة فقط إذا لم يكن موجوداً مسبقاً (يمنع التكرار)
+            db.collection("properties").document(propertyId)
+                .update("reportedBy", FieldValue.arrayUnion(uid))
+                .addOnSuccessListener {
+                    if (isAdded) Toast.makeText(requireContext(), "🚩 تم الإبلاغ عن الإعلان. سنقوم بمراجعته بأقرب وقت.", Toast.LENGTH_LONG).show()
+                    // نقوم بتعطيل الزر بعد الإبلاغ حتى لا يضغط عليه مرة أخرى
+                    binding.reportButton.isEnabled = false
+                    binding.reportButton.text = "تم الإبلاغ"
+                }
+                .addOnFailureListener {
+                    if (isAdded) Toast.makeText(requireContext(), "حدث خطأ أثناء الإبلاغ", Toast.LENGTH_SHORT).show()
+                }
         }
     }
 

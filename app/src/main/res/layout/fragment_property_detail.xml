@@ -146,5 +146,16 @@
             android:layout_margin="16dp"
             android:text="تواصل عبر واتساب" />
 
+        <!-- زر الإبلاغ الجديد -->
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/reportButton"
+            style="@style/Widget.MaterialComponents.Button.TextButton"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginHorizontal="16dp"
+            android:layout_marginBottom="24dp"
+            android:text="🚩 إبلاغ عن محتوى مسيء"
+            android:textColor="#FF5252" />
+
     </LinearLayout>
 </androidx.core.widget.NestedScrollView>
