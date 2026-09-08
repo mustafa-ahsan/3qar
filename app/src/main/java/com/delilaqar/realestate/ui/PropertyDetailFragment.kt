@@ -61,32 +61,6 @@ class PropertyDetailFragment : Fragment() {
                 .load(imageUrl)
                 .placeholder(android.R.color.darker_gray)
                 .error(android.R.drawable.ic_dialog_alert)
-                .listener(object : com.bumptech.glide.request.RequestListener<android.graphics.drawable.Drawable> {
-                    override fun onLoadFailed(
-                        e: com.bumptech.glide.load.engine.GlideException?,
-                        model: Any?,
-                        target: com.bumptech.glide.request.target.Target<android.graphics.drawable.Drawable>?,
-                        isFirstResource: Boolean
-                    ): Boolean {
-                        // هذا الكود سيقوم بطباعة المشكلة الحقيقية على شاشتك!
-                        binding.root.post {
-                            if (isAdded) {
-                                Toast.makeText(requireContext(), "سبب عدم ظهور الصورة: ${e?.message}", Toast.LENGTH_LONG).show()
-                            }
-                        }
-                        return false
-                    }
-
-                    override fun onResourceReady(
-                        resource: android.graphics.drawable.Drawable?,
-                        model: Any?,
-                        target: com.bumptech.glide.request.target.Target<android.graphics.drawable.Drawable>?,
-                        dataSource: com.bumptech.glide.load.DataSource?,
-                        isFirstResource: Boolean
-                    ): Boolean {
-                        return false
-                    }
-                })
                 .centerCrop()
                 .into(binding.detailImage)
         } else {
