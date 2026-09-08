@@ -1,6 +1,8 @@
 package com.delilaqar.realestate.ui
 
+import android.content.Intent
 import android.graphics.Color
+import android.net.Uri
 import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
@@ -13,6 +15,7 @@ import com.delilaqar.realestate.databinding.FragmentPropertyDetailBinding
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FieldValue
 import com.google.firebase.firestore.FirebaseFirestore
+import com.google.firebase.firestore.SetOptions
 import java.util.Locale
 
 class PropertyDetailFragment : Fragment() {
@@ -38,7 +41,6 @@ class PropertyDetailFragment : Fragment() {
             .addOnSuccessListener { doc ->
                 if (_binding == null) return@addOnSuccessListener
                 val property = doc.toObject(Property::class.java) ?: return@addOnSuccessListener
-                // تم التعديل هنا لتمرير الـ propertyId
                 bindProperty(propertyId, property)
             }
             .addOnFailureListener {
@@ -70,13 +72,25 @@ class PropertyDetailFragment : Fragment() {
             binding.detailImage.setBackgroundColor(Color.DKGRAY)
         }
 
+        // --- كود زر الواتساب ---
         binding.whatsappDetailButton.setOnClickListener {
-            if (isAdded) Toast.makeText(requireContext(), "سيتوفر التواصل قريباً", Toast.LENGTH_SHORT).show()
+            // جلب رقم الهاتف من العقار (وإذا كان فارغاً نضع رقم افتراضي)
+            val phone = property.phoneNumber.ifEmpty { "+9647000000000" } 
+            
+            // رسالة جاهزة للبائع
+            val message = "مرحباً، أنا مهتم بعقارك (${property.title}) المعروض في تطبيق عقار."
+            
+            try {
+                // فتح تطبيق واتساب
+                val uri = Uri.parse("https://api.whatsapp.com/send?phone=$phone&text=${Uri.encode(message)}")
+                val intent = Intent(Intent.ACTION_VIEW, uri)
+                startActivity(intent)
+            } catch (e: Exception) {
+                if (isAdded) Toast.makeText(requireContext(), "تطبيق واتساب غير مثبت على جهازك", Toast.LENGTH_SHORT).show()
+            }
         }
 
-        // كود زر الإبلاغ الجديد
-        // كود زر الإبلاغ مع ميزة الإخفاء التلقائي
-        // كود زر الإبلاغ مع الاتصال المباشر بالسيرفر للتحقق من العدد الفعلي
+        // --- كود زر الإبلاغ الذكي ---
         binding.reportButton.setOnClickListener {
             val uid = FirebaseAuth.getInstance().currentUser?.uid
             if (uid == null) {
@@ -84,35 +98,33 @@ class PropertyDetailFragment : Fragment() {
                 return@setOnClickListener
             }
 
-            // نوقف الزر فوراً حتى لا يضغط عليه المستخدم مرتين بسرعة
+            // إيقاف الزر لتجنب الضغط المتكرر
             binding.reportButton.isEnabled = false
             binding.reportButton.text = "جاري الإبلاغ..."
 
             val docRef = db.collection("properties").document(propertyId)
 
-            // 1. نجلب البيانات الطازجة من السيرفر مباشرة لحظة الضغط
+            // قراءة البيانات من السيرفر مباشرة
             docRef.get().addOnSuccessListener { document ->
-                // نقرأ مصفوفة البلاغات الحالية مباشرة من قاعدة البيانات
                 val currentReports = document.get("reportedBy") as? List<*>
                 val reportsCount = currentReports?.size ?: 0
 
                 val updates = hashMapOf<String, Any>(
-                    "reportedBy" to com.google.firebase.firestore.FieldValue.arrayUnion(uid)
+                    "reportedBy" to FieldValue.arrayUnion(uid)
                 )
 
-                // 2. إذا كان عدد البلاغات الفعلي في السيرفر 3 أو أكثر (يعني بلاغنا هذا هو الرابع أو أكثر)
+                // الإخفاء إذا وصل الحد
                 if (reportsCount >= 3) {
                     updates["status"] = "hidden"
                 }
 
-                // 3. نرسل التحديث
-                docRef.set(updates, com.google.firebase.firestore.SetOptions.merge())
+                // إرسال التحديث
+                docRef.set(updates, SetOptions.merge())
                     .addOnSuccessListener {
                         if (isAdded) Toast.makeText(requireContext(), "🚩 تم استلام البلاغ.", Toast.LENGTH_LONG).show()
                         binding.reportButton.text = "تم الإبلاغ"
                     }
                     .addOnFailureListener { e ->
-                        // في حال فشل الإرسال، نعيد تفعيل الزر
                         binding.reportButton.isEnabled = true
                         binding.reportButton.text = "🚩 إبلاغ عن محتوى مسيء"
                         if (isAdded) Toast.makeText(requireContext(), "حدث خطأ: ${e.localizedMessage}", Toast.LENGTH_LONG).show()
