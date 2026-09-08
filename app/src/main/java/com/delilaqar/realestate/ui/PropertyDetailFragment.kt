@@ -82,17 +82,20 @@ class PropertyDetailFragment : Fragment() {
                 return@setOnClickListener
             }
 
-            // arrayUnion تقوم بإضافة الـ uid للقائمة فقط إذا لم يكن موجوداً مسبقاً (يمنع التكرار)
+            // استخدام update، وإذا لم يكن الحقل موجوداً نقوم بإنشائه بـ mapOf لتجنب أي خطأ
+            val updates = hashMapOf<String, Any>(
+                "reportedBy" to com.google.firebase.firestore.FieldValue.arrayUnion(uid)
+            )
+
             db.collection("properties").document(propertyId)
-                .update("reportedBy", FieldValue.arrayUnion(uid))
+                .set(updates, com.google.firebase.firestore.SetOptions.merge())
                 .addOnSuccessListener {
                     if (isAdded) Toast.makeText(requireContext(), "🚩 تم الإبلاغ عن الإعلان. سنقوم بمراجعته بأقرب وقت.", Toast.LENGTH_LONG).show()
-                    // نقوم بتعطيل الزر بعد الإبلاغ حتى لا يضغط عليه مرة أخرى
                     binding.reportButton.isEnabled = false
                     binding.reportButton.text = "تم الإبلاغ"
                 }
-                .addOnFailureListener {
-                    if (isAdded) Toast.makeText(requireContext(), "حدث خطأ أثناء الإبلاغ", Toast.LENGTH_SHORT).show()
+                .addOnFailureListener { e ->
+                    if (isAdded) Toast.makeText(requireContext(), "حدث خطأ: ${e.localizedMessage}", Toast.LENGTH_LONG).show()
                 }
         }
     }
