@@ -26,14 +26,11 @@ class PostAdFragment : Fragment() {
     private val binding get() = _binding!!
     private val db = FirebaseFirestore.getInstance()
 
-    // 1. متغير لحفظ مسار الصورة التي سيختارها المستخدم
     private var selectedImageUri: Uri? = null
 
-    // 2. أداة لفتح الاستوديو واختيار صورة
     private val imagePickerLauncher = registerForActivityResult(ActivityResultContracts.GetContent()) { uri: Uri? ->
         if (uri != null) {
             selectedImageUri = uri
-            // عرض الصورة للمستخدم بعد اختيارها
             binding.imagePreview.setImageURI(uri)
             binding.imagePreview.visibility = View.VISIBLE
         }
@@ -86,9 +83,8 @@ class PostAdFragment : Fragment() {
         )
         binding.cityInput.setAdapter(cityAdapter)
 
-        // 3. ربط زر اختيار الصورة بالاستوديو
         binding.selectImageButton.setOnClickListener {
-            imagePickerLauncher.launch("image/*") // يقبل الصور فقط
+            imagePickerLauncher.launch("image/*")
         }
 
         binding.submitButton.setOnSingleClickListener { submitAd() }
@@ -115,7 +111,6 @@ class PostAdFragment : Fragment() {
             return
         }
 
-        // 4. إجبار المستخدم على اختيار صورة للعقار
         if (selectedImageUri == null) {
             showError("الرجاء اختيار صورة واحدة على الأقل للعقار")
             return
@@ -141,53 +136,65 @@ class PostAdFragment : Fragment() {
 
         binding.submitButton.isEnabled = false
         val originalButtonText = binding.submitButton.text
-        binding.submitButton.text = "جاري رفع الصورة والنشر..." // تحديث واجهة المستخدم
+        binding.submitButton.text = "جاري تحضير الإعلان..."
 
-        // 5. استخدام Coroutine لرفع الصورة بدون تجميد التطبيق
-        lifecycleScope.launch {
-            val uploadedUrl = ImgbbHelper.uploadImage(requireContext(), selectedImageUri!!)
+        // --- التحديث الجديد: جلب رقم الهاتف من حساب المستخدم أولاً ---
+        db.collection("users").document(uid).get().addOnSuccessListener { userDoc ->
+            // نحاول قراءة رقم الهاتف من بيانات المستخدم (إذا لم يكن موجوداً نضع رقماً افتراضياً)
+            val userPhone = userDoc.getString("phone") ?: "+9647000000000"
 
-            if (uploadedUrl == null) {
-                showError("فشل رفع الصورة، يرجى التأكد من اتصالك بالإنترنت والمحاولة مجدداً.")
-                binding.submitButton.isEnabled = true
-                binding.submitButton.text = originalButtonText
-                return@launch
-            }
+            binding.submitButton.text = "جاري رفع الصورة والنشر..." 
 
-            // 6. إذا نجح الرفع، ننشئ كائن العقار مع الرابط الحقيقي
-            val property = hashMapOf(
-                "title" to title,
-                "description" to description,
-                "listingType" to listingType,
-                "propertyType" to propertyType,
-                "price" to (priceText.toDoubleOrNull() ?: 0.0),
-                "cityId" to cityId,
-                "district" to district,
-                "bedrooms" to (bedroomsText.toIntOrNull() ?: 0),
-                "bathrooms" to (bathroomsText.toIntOrNull() ?: 0),
-                "area" to (areaText.toDoubleOrNull() ?: 0.0),
-                "featured" to false,
-                "status" to "active",
-                "images" to listOf(uploadedUrl), // الرابط الحقيقي هنا!
-                "ownerId" to uid
-            )
+            // نبدأ عملية رفع الصورة والنشر باستخدام Coroutine
+            lifecycleScope.launch {
+                val uploadedUrl = ImgbbHelper.uploadImage(requireContext(), selectedImageUri!!)
 
-            db.collection("properties").add(property)
-                .addOnSuccessListener {
-                    if (_binding == null) return@addOnSuccessListener
-                    Toast.makeText(requireContext(), "✅ تم نشر الإعلان بنجاح", Toast.LENGTH_LONG).show()
-                    findNavController().navigateSafe(
-                        R.id.homeFragment,
-                        null,
-                        NavOptions.Builder().setPopUpTo(R.id.postAdFragment, true).build()
-                    )
-                }
-                .addOnFailureListener { e ->
-                    if (_binding == null) return@addOnFailureListener
-                    showError("فشل نشر الإعلان: ${e.message}")
+                if (uploadedUrl == null) {
+                    showError("فشل رفع الصورة، يرجى التأكد من اتصالك بالإنترنت والمحاولة مجدداً.")
                     binding.submitButton.isEnabled = true
                     binding.submitButton.text = originalButtonText
+                    return@launch
                 }
+
+                val property = hashMapOf(
+                    "title" to title,
+                    "description" to description,
+                    "listingType" to listingType,
+                    "propertyType" to propertyType,
+                    "price" to (priceText.toDoubleOrNull() ?: 0.0),
+                    "cityId" to cityId,
+                    "district" to district,
+                    "bedrooms" to (bedroomsText.toIntOrNull() ?: 0),
+                    "bathrooms" to (bathroomsText.toIntOrNull() ?: 0),
+                    "area" to (areaText.toDoubleOrNull() ?: 0.0),
+                    "featured" to false,
+                    "status" to "active",
+                    "images" to listOf(uploadedUrl),
+                    "ownerId" to uid,
+                    "phoneNumber" to userPhone // تم دمج رقم هاتف الناشر هنا!
+                )
+
+                db.collection("properties").add(property)
+                    .addOnSuccessListener {
+                        if (_binding == null) return@addOnSuccessListener
+                        Toast.makeText(requireContext(), "✅ تم نشر الإعلان بنجاح", Toast.LENGTH_LONG).show()
+                        findNavController().navigateSafe(
+                            R.id.homeFragment,
+                            null,
+                            NavOptions.Builder().setPopUpTo(R.id.postAdFragment, true).build()
+                        )
+                    }
+                    .addOnFailureListener { e ->
+                        if (_binding == null) return@addOnFailureListener
+                        showError("فشل نشر الإعلان: ${e.message}")
+                        binding.submitButton.isEnabled = true
+                        binding.submitButton.text = originalButtonText
+                    }
+            }
+        }.addOnFailureListener {
+            showError("فشل في الوصول لبيانات حسابك.")
+            binding.submitButton.isEnabled = true
+            binding.submitButton.text = originalButtonText
         }
     }
 
