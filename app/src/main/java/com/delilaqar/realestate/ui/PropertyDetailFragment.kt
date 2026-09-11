@@ -72,10 +72,22 @@ class PropertyDetailFragment : Fragment() {
             binding.detailImage.setBackgroundColor(Color.DKGRAY)
         }
 
-        // --- كود زر الواتساب ---
+        // --- كود زر الواتساب الذكي المحدث ---
         binding.whatsappDetailButton.setOnClickListener {
-            // جلب رقم الهاتف من العقار (وإذا كان فارغاً نضع رقم افتراضي)
-            val phone = property.phoneNumber.ifEmpty { "+9647000000000" } 
+            // 1. جلب الرقم وإزالة أي مسافات فارغة منه
+            var phone = property.phoneNumber.trim().ifEmpty { "+9647000000000" }
+            
+            // 2. تعديل ذكي للرقم ليتوافق مع متطلبات واتساب الدولية
+            if (phone.startsWith("07")) {
+                // إذا كان يبدأ بـ 07، نحذف الصفر ونضيف رمز الدولة
+                phone = "+964" + phone.substring(1) 
+            } else if (phone.startsWith("00964")) {
+                // إذا كتبه المستخدم بصيغة 00964، نحولها 
+                phone = "+964" + phone.substring(5)
+            } else if (!phone.startsWith("+")) {
+                // كإجراء احتياطي لأي رقم لا يبدأ بـ +
+                phone = "+964$phone"
+            }
             
             // رسالة جاهزة للبائع
             val message = "مرحباً، أنا مهتم بعقارك (${property.title}) المعروض في تطبيق عقار."

@@ -1,5 +1,7 @@
 package com.delilaqar.realestate.ui
 
+import android.content.Intent
+import android.net.Uri
 import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
@@ -42,8 +44,28 @@ class HomeFragment : Fragment() {
                     findNavController().navigateSafe(R.id.propertyDetailFragment, bundle)
                 }
             },
-            onWhatsappClick = {
-                if (isAdded) Toast.makeText(requireContext(), "التواصل عبر واتساب قريباً", Toast.LENGTH_SHORT).show()
+            onWhatsappClick = { property ->
+                // --- كود زر الواتساب الذكي ---
+                var phone = property.phoneNumber.trim().ifEmpty { "+9647000000000" }
+                
+                // تعديل ذكي للرقم ليتوافق مع متطلبات واتساب الدولية
+                if (phone.startsWith("07")) {
+                    phone = "+964" + phone.substring(1) 
+                } else if (phone.startsWith("00964")) {
+                    phone = "+964" + phone.substring(5)
+                } else if (!phone.startsWith("+")) {
+                    phone = "+964$phone"
+                }
+                
+                val message = "مرحباً، أنا مهتم بعقارك (${property.title}) المعروض في تطبيق عقار."
+                
+                try {
+                    val uri = Uri.parse("https://api.whatsapp.com/send?phone=$phone&text=${Uri.encode(message)}")
+                    val intent = Intent(Intent.ACTION_VIEW, uri)
+                    startActivity(intent)
+                } catch (e: Exception) {
+                    if (isAdded) Toast.makeText(requireContext(), "تطبيق واتساب غير مثبت على جهازك", Toast.LENGTH_SHORT).show()
+                }
             },
             onFavoriteClick = { property -> toggleFavorite(property) }
         )

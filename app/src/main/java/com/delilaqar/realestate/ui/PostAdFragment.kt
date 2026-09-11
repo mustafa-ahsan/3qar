@@ -1,7 +1,11 @@
 package com.delilaqar.realestate.ui
 
+import android.graphics.Bitmap
+import android.graphics.ImageDecoder
 import android.net.Uri
+import android.os.Build
 import android.os.Bundle
+import android.provider.MediaStore
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -15,11 +19,14 @@ import androidx.navigation.fragment.findNavController
 import com.delilaqar.realestate.R
 import com.delilaqar.realestate.databinding.FragmentPostAdBinding
 import com.delilaqar.realestate.util.ImgbbHelper
+import com.delilaqar.realestate.util.NsfwDetector
 import com.delilaqar.realestate.util.navigateSafe
 import com.delilaqar.realestate.util.setOnSingleClickListener
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 
 class PostAdFragment : Fragment() {
     private var _binding: FragmentPostAdBinding? = null
@@ -68,25 +75,14 @@ class PostAdFragment : Fragment() {
         super.onViewCreated(view, savedInstanceState)
 
         if (FirebaseAuth.getInstance().currentUser == null) {
-            findNavController().navigateSafe(
-                R.id.loginFragment,
-                null,
-                NavOptions.Builder().setPopUpTo(R.id.postAdFragment, true).build()
-            )
+            findNavController().navigateSafe(R.id.loginFragment, null, NavOptions.Builder().setPopUpTo(R.id.postAdFragment, true).build())
             return
         }
 
-        val cityAdapter = ArrayAdapter(
-            requireContext(),
-            android.R.layout.simple_list_item_1,
-            cities.values.toList()
-        )
+        val cityAdapter = ArrayAdapter(requireContext(), android.R.layout.simple_list_item_1, cities.values.toList())
         binding.cityInput.setAdapter(cityAdapter)
 
-        binding.selectImageButton.setOnClickListener {
-            imagePickerLauncher.launch("image/*")
-        }
-
+        binding.selectImageButton.setOnClickListener { imagePickerLauncher.launch("image/*") }
         binding.submitButton.setOnSingleClickListener { submitAd() }
     }
 
@@ -102,28 +98,19 @@ class PostAdFragment : Fragment() {
         val cityName = binding.cityInput.text?.toString()?.trim().orEmpty()
         val district = binding.districtInput.text?.toString()?.trim().orEmpty()
         val priceText = binding.priceInput.text?.toString()?.trim().orEmpty()
-        val bedroomsText = binding.bedroomsInput.text?.toString()?.trim().orEmpty()
-        val bathroomsText = binding.bathroomsInput.text?.toString()?.trim().orEmpty()
-        val areaText = binding.areaInput.text?.toString()?.trim().orEmpty()
-
+        
         if (title.isEmpty() || cityName.isEmpty() || district.isEmpty() || priceText.isEmpty()) {
-            showError("الرجاء تعبئة الحقول الأساسية (العنوان، المدينة، الحي، السعر)")
+            showError("الرجاء تعبئة الحقول الأساسية")
             return
         }
 
         if (selectedImageUri == null) {
-            showError("الرجاء اختيار صورة واحدة على الأقل للعقار")
+            showError("الرجاء اختيار صورة واحدة على الأقل")
             return
         }
 
-        val cityId = cities.entries.firstOrNull { it.value == cityName }?.key
-        if (cityId == null) {
-            showError("الرجاء اختيار مدينة من القائمة")
-            return
-        }
-
+        val cityId = cities.entries.firstOrNull { it.value == cityName }?.key ?: return
         val listingType = if (binding.listingTypeGroup.checkedChipId == binding.chipRent.id) "rent" else "sale"
-
         val propertyType = when (binding.propertyTypeGroup.checkedChipId) {
             binding.chipVilla.id -> "villa"
             binding.chipLand.id -> "land"
@@ -134,55 +121,83 @@ class PostAdFragment : Fragment() {
             else -> "apartment"
         }
 
+        try {
+            val checkStream = requireContext().contentResolver.openInputStream(selectedImageUri!!)
+            val exifCheck = checkStream?.let { androidx.exifinterface.media.ExifInterface(it) }
+            val orientationValue = exifCheck?.getAttributeInt(
+                androidx.exifinterface.media.ExifInterface.TAG_ORIENTATION, -1
+            ) ?: -1
+            checkStream?.close()
+            Toast.makeText(requireContext(), "قيمة الدوران EXIF: $orientationValue", Toast.LENGTH_LONG).show()
+        } catch (e: Exception) {
+            Toast.makeText(requireContext(), "خطأ EXIF: ${e.message}", Toast.LENGTH_LONG).show()
+        }
+
         binding.submitButton.isEnabled = false
         val originalButtonText = binding.submitButton.text
-        binding.submitButton.text = "جاري تحضير الإعلان..."
+        binding.submitButton.text = "جاري الفحص الأمني للصورة..."
 
-        // --- التحديث الجديد: جلب رقم الهاتف من حساب المستخدم أولاً ---
         db.collection("users").document(uid).get().addOnSuccessListener { userDoc ->
-            // نحاول قراءة رقم الهاتف من بيانات المستخدم (إذا لم يكن موجوداً نضع رقماً افتراضياً)
             val userPhone = userDoc.getString("phone") ?: "+9647000000000"
 
-            binding.submitButton.text = "جاري رفع الصورة والنشر..." 
-
-            // نبدأ عملية رفع الصورة والنشر باستخدام Coroutine
             lifecycleScope.launch {
+                val (isNsfw, debugStr) = withContext(Dispatchers.IO) {
+                    try {
+                        val bitmap = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
+                            val source = ImageDecoder.createSource(requireContext().contentResolver, selectedImageUri!!)
+                            // إجبار الأندرويد على استخدام Software Bitmap ليتوافق مع الذكاء الاصطناعي
+                            ImageDecoder.decodeBitmap(source) { decoder, _, _ ->
+                                decoder.allocator = ImageDecoder.ALLOCATOR_SOFTWARE
+                                decoder.isMutableRequired = true
+                            }
+                        } else {
+                            MediaStore.Images.Media.getBitmap(requireContext().contentResolver, selectedImageUri!!)
+                        }
+                        
+                        val softwareBitmap = bitmap.copy(Bitmap.Config.ARGB_8888, true) ?: bitmap
+                        val detector = NsfwDetector(requireContext())
+                        val result = detector.isNsfw(softwareBitmap)
+                        detector.close()
+                        result
+                    } catch (e: Exception) {
+                        e.printStackTrace()
+                        Pair(true, "Exception: ${e.message}") 
+                    }
+                }
+
+                // عرض الأرقام على الشاشة لكي نقرأها
+                Toast.makeText(requireContext(), "أرقام الفحص: $debugStr", Toast.LENGTH_LONG).show()
+
+                if (isNsfw) {
+                    showError("عذراً! تم حظر نشر الإعلان لأن الصورة تحتوي على مشاهد غير لائقة.")
+                    binding.submitButton.isEnabled = true
+                    binding.submitButton.text = originalButtonText
+                    return@launch
+                }
+
+                binding.submitButton.text = "جاري الرفع والنشر..."
+
                 val uploadedUrl = ImgbbHelper.uploadImage(requireContext(), selectedImageUri!!)
 
                 if (uploadedUrl == null) {
-                    showError("فشل رفع الصورة، يرجى التأكد من اتصالك بالإنترنت والمحاولة مجدداً.")
+                    showError("فشل رفع الصورة.")
                     binding.submitButton.isEnabled = true
                     binding.submitButton.text = originalButtonText
                     return@launch
                 }
 
                 val property = hashMapOf(
-                    "title" to title,
-                    "description" to description,
-                    "listingType" to listingType,
-                    "propertyType" to propertyType,
-                    "price" to (priceText.toDoubleOrNull() ?: 0.0),
-                    "cityId" to cityId,
-                    "district" to district,
-                    "bedrooms" to (bedroomsText.toIntOrNull() ?: 0),
-                    "bathrooms" to (bathroomsText.toIntOrNull() ?: 0),
-                    "area" to (areaText.toDoubleOrNull() ?: 0.0),
-                    "featured" to false,
-                    "status" to "active",
-                    "images" to listOf(uploadedUrl),
-                    "ownerId" to uid,
-                    "phoneNumber" to userPhone // تم دمج رقم هاتف الناشر هنا!
+                    "title" to title, "description" to description, "listingType" to listingType,
+                    "propertyType" to propertyType, "price" to (priceText.toDoubleOrNull() ?: 0.0),
+                    "cityId" to cityId, "district" to district, "status" to "active",
+                    "images" to listOf(uploadedUrl), "ownerId" to uid, "phoneNumber" to userPhone
                 )
 
                 db.collection("properties").add(property)
                     .addOnSuccessListener {
                         if (_binding == null) return@addOnSuccessListener
                         Toast.makeText(requireContext(), "✅ تم نشر الإعلان بنجاح", Toast.LENGTH_LONG).show()
-                        findNavController().navigateSafe(
-                            R.id.homeFragment,
-                            null,
-                            NavOptions.Builder().setPopUpTo(R.id.postAdFragment, true).build()
-                        )
+                        findNavController().navigateSafe(R.id.homeFragment, null, NavOptions.Builder().setPopUpTo(R.id.postAdFragment, true).build())
                     }
                     .addOnFailureListener { e ->
                         if (_binding == null) return@addOnFailureListener
@@ -192,7 +207,7 @@ class PostAdFragment : Fragment() {
                     }
             }
         }.addOnFailureListener {
-            showError("فشل في الوصول لبيانات حسابك.")
+            showError("فشل الوصول لبيانات حسابك.")
             binding.submitButton.isEnabled = true
             binding.submitButton.text = originalButtonText
         }

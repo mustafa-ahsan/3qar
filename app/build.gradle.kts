@@ -17,6 +17,10 @@ android {
         versionName = "1.0"
     }
 
+    androidResources {
+        noCompress("tflite")
+    }
+
     buildTypes {
         release {
             isMinifyEnabled = false
@@ -38,6 +42,8 @@ android {
 }
 
 dependencies {
+    implementation("org.tensorflow:tensorflow-lite:2.14.0")
+    implementation("org.tensorflow:tensorflow-lite-support:0.4.4")
     implementation("com.squareup.okhttp3:okhttp:4.12.0")
     implementation("androidx.core:core-ktx:1.13.1")
     implementation("androidx.appcompat:appcompat:1.7.0")
