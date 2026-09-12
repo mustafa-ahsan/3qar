@@ -7,4 +7,5 @@
     <color name="text_primary">#FFFFFF</color>
     <color name="text_secondary">#9A9CAE</color>
     <color name="divider">#2A2C3D</color>
+    <color name="surface_card_light">#1F2236</color>
 </resources>

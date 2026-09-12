@@ -24,4 +24,17 @@
     <string name="type_building">عمارة كاملة</string>
 
     <string name="empty_properties">لا توجد عقارات متاحة حالياً</string>
+    <string name="app_header_title">عقار - المنصة العقارية</string>
+    <string name="app_header_subtitle">ابحث عن منزل أحلامك وأفضل الفرص الاستثمارية</string>
+    <string name="app_badge">عقار</string>
+    <string name="search_hint">ابحث بالمدينة، الحي، أو نوع العقار...</string>
+    <string name="filter_all_offers">جميع العروض</string>
+    <string name="filter_for_sale">للبيع</string>
+    <string name="filter_for_rent">للإيجار</string>
+    <string name="filter_wanted">مطلوب عقار</string>
+    <string name="type_all">الكل</string>
+    <string name="featured_section_title">عقارات مميزة ومختارة</string>
+    <string name="latest_section_title">أحدث العروض العقارية</string>
+    <string name="featured_badge">مميز</string>
+    <string name="properties_available_format">%d عقار متاح</string>
 </resources>
