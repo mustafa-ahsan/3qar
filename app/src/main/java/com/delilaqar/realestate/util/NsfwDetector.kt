@@ -99,7 +99,7 @@ class NsfwDetector(private val context: Context) {
             val expNsfw = exp((logitNsfw - maxLogit).toDouble())
             val probNsfw = (expNsfw / (expNormal + expNsfw)).toFloat()
 
-            val isUnsafe = probNsfw > 0.5f
+            val isUnsafe = probNsfw > 0.15f
             Pair(isUnsafe, "nsfw probability: ${String.format(Locale.US, "%.4f", probNsfw)}")
         } catch (e: Exception) {
             e.printStackTrace()
