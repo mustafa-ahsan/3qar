@@ -24,7 +24,7 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_marginBottom="18dp"
-            android:text="عبّي البيانات التالية لنشر عقارك"
+            android:text="املأ البيانات التالية لنشر عقارك"
             android:textColor="@color/text_secondary"
             android:textSize="13sp" />
 

@@ -233,7 +233,7 @@ class HomeFragment : Fragment() {
     private fun toggleFavorite(property: Property) {
         val uid = FirebaseAuth.getInstance().currentUser?.uid
         if (uid == null) {
-            if (isAdded) Toast.makeText(requireContext(), "سجل الدخول أولاً لحفظ العقار بالمفضلة", Toast.LENGTH_SHORT).show()
+            if (isAdded) Toast.makeText(requireContext(), "يرجى تسجيل الدخول أولاً لحفظ العقار في المفضلة", Toast.LENGTH_SHORT).show()
             return
         }
         val favRef = db.collection("users").document(uid).collection("favorites").document(property.id)

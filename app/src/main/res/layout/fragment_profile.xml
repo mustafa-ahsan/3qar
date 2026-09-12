@@ -165,32 +165,10 @@
                 android:layout_height="wrap_content"
                 android:layout_marginVertical="20dp"
                 android:gravity="center"
-                android:text="ما نشرت أي إعلان لحد الحين"
+                android:text="لم تنشر أي إعلان حتى الآن"
                 android:textColor="@color/text_secondary"
                 android:textSize="13sp"
                 android:visibility="gone" />
-
-            <View
-                android:layout_width="match_parent"
-                android:layout_height="1dp"
-                android:layout_marginVertical="20dp"
-                android:background="@color/divider" />
-
-            <TextView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_marginBottom="10dp"
-                android:text="أدوات المطور المؤقتة"
-                android:textColor="@color/text_secondary"
-                android:textSize="11sp" />
-
-            <com.google.android.material.button.MaterialButton
-                android:id="@+id/seedButton"
-                style="@style/OutlinedButtonDark"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_marginBottom="24dp"
-                android:text="إضافة عقارات تجريبية (عراقية)" />
 
         </LinearLayout>
     </androidx.core.widget.NestedScrollView>
