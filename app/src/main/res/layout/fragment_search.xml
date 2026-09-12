@@ -5,234 +5,387 @@
     android:layout_height="match_parent"
     android:background="@color/background_dark">
 
-    <LinearLayout
-        android:id="@+id/filtersSection"
+    <androidx.core.widget.NestedScrollView
+        android:id="@+id/filtersScroll"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:orientation="vertical"
-        android:padding="12dp"
+        android:layout_marginTop="12dp"
         app:layout_constraintTop_toTopOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintEnd_toEndOf="parent">
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintHeight_max="wrap"
+        android:maxHeight="9999dp">
 
-        <com.google.android.material.textfield.TextInputLayout
-            style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox"
+        <LinearLayout
+            android:id="@+id/filtersSection"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginBottom="10dp"
-            android:hint="ابحث بالعنوان أو الحي">
+            android:orientation="vertical"
+            android:paddingHorizontal="16dp">
 
-            <com.google.android.material.textfield.TextInputEditText
-                android:id="@+id/searchInput"
+            <!-- Search bar -->
+            <LinearLayout
                 android:layout_width="match_parent"
-                android:layout_height="wrap_content" />
-        </com.google.android.material.textfield.TextInputLayout>
+                android:layout_height="52dp"
+                android:background="@drawable/bg_search_bar"
+                android:orientation="horizontal"
+                android:gravity="center_vertical"
+                android:paddingHorizontal="14dp">
 
-        <HorizontalScrollView
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginBottom="8dp"
-            android:scrollbars="none">
+                <ImageView
+                    android:layout_width="20dp"
+                    android:layout_height="20dp"
+                    android:src="@drawable/ic_search"
+                    android:contentDescription="@null" />
 
-            <com.google.android.material.chip.ChipGroup
-                android:id="@+id/listingTypeFilter"
-                android:layout_width="wrap_content"
+                <EditText
+                    android:id="@+id/searchInput"
+                    android:layout_width="0dp"
+                    android:layout_height="match_parent"
+                    android:layout_weight="1"
+                    android:layout_marginHorizontal="8dp"
+                    android:background="@null"
+                    android:hint="ابحث بالعنوان أو الحي"
+                    android:textColor="@color/text_primary"
+                    android:textColorHint="@color/text_secondary"
+                    android:textSize="14sp"
+                    android:singleLine="true"
+                    android:imeOptions="actionSearch" />
+            </LinearLayout>
+
+            <!-- Sort + Advanced filter row -->
+            <LinearLayout
+                android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                app:singleLine="true"
-                app:singleSelection="true">
+                android:layout_marginTop="12dp"
+                android:orientation="horizontal">
 
-                <com.google.android.material.chip.Chip
-                    android:id="@+id/filterAllListing"
-                    style="@style/Widget.MaterialComponents.Chip.Choice"
+                <LinearLayout
+                    android:id="@+id/sortButton"
                     android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:checked="true"
-                    android:text="الكل" />
+                    android:layout_height="44dp"
+                    android:background="@drawable/bg_pill_unselected"
+                    android:orientation="horizontal"
+                    android:gravity="center"
+                    android:paddingHorizontal="14dp">
 
-                <com.google.android.material.chip.Chip
-                    android:id="@+id/filterSale"
-                    style="@style/Widget.MaterialComponents.Chip.Choice"
+                    <ImageView
+                        android:id="@+id/sortChevron"
+                        android:layout_width="16dp"
+                        android:layout_height="16dp"
+                        android:layout_marginEnd="6dp"
+                        android:src="@drawable/ic_chevron_down"
+                        android:contentDescription="@null" />
+
+                    <TextView
+                        android:id="@+id/sortLabel"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="الأحدث أولاً"
+                        android:textColor="@color/text_primary"
+                        android:textSize="13sp" />
+
+                    <ImageView
+                        android:layout_width="16dp"
+                        android:layout_height="16dp"
+                        android:layout_marginStart="6dp"
+                        android:src="@drawable/ic_sort"
+                        android:contentDescription="@null" />
+                </LinearLayout>
+
+                <View
+                    android:layout_width="0dp"
+                    android:layout_height="1dp"
+                    android:layout_weight="1" />
+
+                <LinearLayout
+                    android:id="@+id/advancedFilterToggle"
                     android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="للبيع" />
+                    android:layout_height="44dp"
+                    android:background="@drawable/bg_pill_selected"
+                    android:backgroundTint="@color/accent_orange"
+                    android:orientation="horizontal"
+                    android:gravity="center"
+                    android:paddingHorizontal="16dp">
 
-                <com.google.android.material.chip.Chip
-                    android:id="@+id/filterRent"
-                    style="@style/Widget.MaterialComponents.Chip.Choice"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="للإيجار" />
-            </com.google.android.material.chip.ChipGroup>
-        </HorizontalScrollView>
+                    <ImageView
+                        android:id="@+id/advancedFilterChevron"
+                        android:layout_width="16dp"
+                        android:layout_height="16dp"
+                        android:layout_marginEnd="6dp"
+                        android:src="@drawable/ic_chevron_down"
+                        android:contentDescription="@null" />
 
-        <HorizontalScrollView
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginBottom="8dp"
-            android:scrollbars="none">
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="تصفية متقدمة"
+                        android:textColor="@color/text_primary"
+                        android:textSize="13sp"
+                        android:textStyle="bold" />
 
-            <com.google.android.material.chip.ChipGroup
-                android:id="@+id/propertyTypeFilter"
-                android:layout_width="wrap_content"
+                    <ImageView
+                        android:layout_width="16dp"
+                        android:layout_height="16dp"
+                        android:layout_marginStart="6dp"
+                        android:src="@drawable/ic_filter"
+                        android:contentDescription="@null" />
+                </LinearLayout>
+            </LinearLayout>
+
+            <!-- Advanced filter panel (collapsible) -->
+            <LinearLayout
+                android:id="@+id/advancedFilterPanel"
+                android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                app:singleLine="true"
-                app:singleSelection="true">
+                android:layout_marginTop="14dp"
+                android:background="@drawable/bg_search_bar"
+                android:orientation="vertical"
+                android:padding="16dp"
+                android:visibility="gone">
 
-                <com.google.android.material.chip.Chip
-                    android:id="@+id/filterAllType"
-                    style="@style/Widget.MaterialComponents.Chip.Choice"
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal"
+                    android:gravity="center_vertical">
+
+                    <TextView
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:text="تصفية متقدمة"
+                        android:textColor="@color/text_primary"
+                        android:textSize="16sp"
+                        android:textStyle="bold" />
+
+                    <TextView
+                        android:id="@+id/resetFiltersButton"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:padding="4dp"
+                        android:text="إعادة ضبط"
+                        android:textColor="@color/primary_blue"
+                        android:textSize="13sp" />
+                </LinearLayout>
+
+                <TextView
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:checked="true"
-                    android:text="الكل" />
+                    android:layout_marginTop="16dp"
+                    android:text="نوع العرض العقاري"
+                    android:textColor="@color/text_primary"
+                    android:textSize="14sp"
+                    android:textStyle="bold" />
 
-                <com.google.android.material.chip.Chip
-                    android:id="@+id/filterApartment"
-                    style="@style/Widget.MaterialComponents.Chip.Choice"
+                <com.google.android.material.chip.ChipGroup
+                    android:id="@+id/listingTypeFilter"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="8dp"
+                    app:singleSelection="true"
+                    app:chipSpacingHorizontal="6dp">
+
+                    <com.google.android.material.chip.Chip
+                        android:id="@+id/filterAllListing"
+                        style="@style/PillChoiceChip"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:checked="true"
+                        android:text="جميع العروض" />
+
+                    <com.google.android.material.chip.Chip
+                        android:id="@+id/filterSale"
+                        style="@style/PillChoiceChip"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="للبيع" />
+
+                    <com.google.android.material.chip.Chip
+                        android:id="@+id/filterRent"
+                        style="@style/PillChoiceChip"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="للإيجار" />
+                </com.google.android.material.chip.ChipGroup>
+
+                <TextView
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="شقة" />
+                    android:layout_marginTop="18dp"
+                    android:text="نوع العقار"
+                    android:textColor="@color/text_primary"
+                    android:textSize="14sp"
+                    android:textStyle="bold" />
 
-                <com.google.android.material.chip.Chip
-                    android:id="@+id/filterVilla"
-                    style="@style/Widget.MaterialComponents.Chip.Choice"
+                <com.google.android.material.chip.ChipGroup
+                    android:id="@+id/propertyTypeFilter"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="8dp"
+                    app:singleSelection="true"
+                    app:chipSpacingHorizontal="6dp">
+
+                    <com.google.android.material.chip.Chip
+                        android:id="@+id/filterAllType"
+                        style="@style/PillChoiceChip"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:checked="true"
+                        android:text="الكل" />
+
+                    <com.google.android.material.chip.Chip
+                        android:id="@+id/filterApartment"
+                        style="@style/PillChoiceChip"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="شقة" />
+
+                    <com.google.android.material.chip.Chip
+                        android:id="@+id/filterVilla"
+                        style="@style/PillChoiceChip"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="فيلا" />
+
+                    <com.google.android.material.chip.Chip
+                        android:id="@+id/filterLand"
+                        style="@style/PillChoiceChip"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="أرض" />
+
+                    <com.google.android.material.chip.Chip
+                        android:id="@+id/filterCommercial"
+                        style="@style/PillChoiceChip"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="تجاري ومكاتب" />
+
+                    <com.google.android.material.chip.Chip
+                        android:id="@+id/filterDuplex"
+                        style="@style/PillChoiceChip"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="دوبلكس" />
+
+                    <com.google.android.material.chip.Chip
+                        android:id="@+id/filterChalet"
+                        style="@style/PillChoiceChip"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="شاليه" />
+
+                    <com.google.android.material.chip.Chip
+                        android:id="@+id/filterBuilding"
+                        style="@style/PillChoiceChip"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="عمارة كاملة" />
+                </com.google.android.material.chip.ChipGroup>
+
+                <TextView
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="فيلا" />
+                    android:layout_marginTop="18dp"
+                    android:text="المدينة"
+                    android:textColor="@color/text_primary"
+                    android:textSize="14sp"
+                    android:textStyle="bold" />
 
-                <com.google.android.material.chip.Chip
-                    android:id="@+id/filterLand"
-                    style="@style/Widget.MaterialComponents.Chip.Choice"
+                <com.google.android.material.chip.ChipGroup
+                    android:id="@+id/cityFilter"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="8dp"
+                    app:singleSelection="true"
+                    app:chipSpacingHorizontal="6dp">
+
+                    <com.google.android.material.chip.Chip
+                        android:id="@+id/filterAllCities"
+                        style="@style/PillChoiceChip"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:checked="true"
+                        android:text="جميع المدن" />
+                </com.google.android.material.chip.ChipGroup>
+
+                <TextView
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="أرض" />
+                    android:layout_marginTop="18dp"
+                    android:text="غرف النوم"
+                    android:textColor="@color/text_primary"
+                    android:textSize="14sp"
+                    android:textStyle="bold" />
 
-                <com.google.android.material.chip.Chip
-                    android:id="@+id/filterCommercial"
-                    style="@style/Widget.MaterialComponents.Chip.Choice"
-                    android:layout_width="wrap_content"
+                <com.google.android.material.chip.ChipGroup
+                    android:id="@+id/bedroomsFilter"
+                    android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:text="تجاري ومكاتب" />
+                    android:layout_marginTop="8dp"
+                    app:singleSelection="true"
+                    app:chipSpacingHorizontal="6dp">
 
-                <com.google.android.material.chip.Chip
-                    android:id="@+id/filterDuplex"
-                    style="@style/Widget.MaterialComponents.Chip.Choice"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="دوبلكس" />
+                    <com.google.android.material.chip.Chip
+                        android:id="@+id/filterAnyBedrooms"
+                        style="@style/PillChoiceChip"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:checked="true"
+                        android:text="أي" />
 
-                <com.google.android.material.chip.Chip
-                    android:id="@+id/filterChalet"
-                    style="@style/Widget.MaterialComponents.Chip.Choice"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="شاليه" />
+                    <com.google.android.material.chip.Chip
+                        android:id="@+id/filterBed1"
+                        style="@style/PillChoiceChip"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="1" />
 
-                <com.google.android.material.chip.Chip
-                    android:id="@+id/filterBuilding"
-                    style="@style/Widget.MaterialComponents.Chip.Choice"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="عمارة كاملة" />
-            </com.google.android.material.chip.ChipGroup>
-        </HorizontalScrollView>
+                    <com.google.android.material.chip.Chip
+                        android:id="@+id/filterBed2"
+                        style="@style/PillChoiceChip"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="2" />
 
-        <HorizontalScrollView
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginBottom="8dp"
-            android:scrollbars="none">
+                    <com.google.android.material.chip.Chip
+                        android:id="@+id/filterBed3"
+                        style="@style/PillChoiceChip"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="3" />
 
-            <com.google.android.material.chip.ChipGroup
-                android:id="@+id/cityFilter"
-                android:layout_width="wrap_content"
+                    <com.google.android.material.chip.Chip
+                        android:id="@+id/filterBed4"
+                        style="@style/PillChoiceChip"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="4" />
+                </com.google.android.material.chip.ChipGroup>
+
+            </LinearLayout>
+
+            <androidx.recyclerview.widget.RecyclerView
+                android:id="@+id/searchRecyclerView"
+                android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                app:singleLine="true"
-                app:singleSelection="true">
+                android:layout_marginTop="16dp"
+                android:nestedScrollingEnabled="false"
+                android:clipToPadding="false"
+                android:paddingBottom="8dp" />
 
-                <com.google.android.material.chip.Chip
-                    android:id="@+id/filterAllCities"
-                    style="@style/Widget.MaterialComponents.Chip.Choice"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:checked="true"
-                    android:text="جميع المدن" />
-            </com.google.android.material.chip.ChipGroup>
-        </HorizontalScrollView>
-
-        <HorizontalScrollView
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:scrollbars="none">
-
-            <com.google.android.material.chip.ChipGroup
-                android:id="@+id/bedroomsFilter"
-                android:layout_width="wrap_content"
+            <TextView
+                android:id="@+id/emptyText"
+                android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                app:singleLine="true"
-                app:singleSelection="true">
+                android:layout_marginTop="40dp"
+                android:gravity="center"
+                android:text="لا توجد نتائج مطابقة"
+                android:textColor="@color/text_secondary"
+                android:visibility="gone" />
 
-                <com.google.android.material.chip.Chip
-                    android:id="@+id/filterAnyBedrooms"
-                    style="@style/Widget.MaterialComponents.Chip.Choice"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:checked="true"
-                    android:text="أي عدد" />
-
-                <com.google.android.material.chip.Chip
-                    android:id="@+id/filterBed1"
-                    style="@style/Widget.MaterialComponents.Chip.Choice"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="+1" />
-
-                <com.google.android.material.chip.Chip
-                    android:id="@+id/filterBed2"
-                    style="@style/Widget.MaterialComponents.Chip.Choice"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="+2" />
-
-                <com.google.android.material.chip.Chip
-                    android:id="@+id/filterBed3"
-                    style="@style/Widget.MaterialComponents.Chip.Choice"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="+3" />
-
-                <com.google.android.material.chip.Chip
-                    android:id="@+id/filterBed4"
-                    style="@style/Widget.MaterialComponents.Chip.Choice"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="+4" />
-            </com.google.android.material.chip.ChipGroup>
-        </HorizontalScrollView>
-
-    </LinearLayout>
-
-    <androidx.recyclerview.widget.RecyclerView
-        android:id="@+id/searchRecyclerView"
-        android:layout_width="match_parent"
-        android:layout_height="0dp"
-        android:clipToPadding="false"
-        android:paddingBottom="8dp"
-        app:layout_constraintTop_toBottomOf="@id/filtersSection"
-        app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintEnd_toEndOf="parent" />
-
-    <TextView
-        android:id="@+id/emptyText"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="لا توجد نتائج مطابقة"
-        android:textColor="@color/text_secondary"
-        android:visibility="gone"
-        app:layout_constraintTop_toBottomOf="@id/filtersSection"
-        app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintEnd_toEndOf="parent" />
+        </LinearLayout>
+    </androidx.core.widget.NestedScrollView>
 
 </androidx.constraintlayout.widget.ConstraintLayout>
