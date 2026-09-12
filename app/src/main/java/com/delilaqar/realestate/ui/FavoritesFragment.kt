@@ -62,6 +62,10 @@ class FavoritesFragment : Fragment() {
         binding.favoritesRecyclerView.adapter = adapter
 
         loadFavorites(uid)
+
+        binding.browsePropertiesButton.setOnClickListener {
+            if (isAdded) findNavController().navigateSafe(R.id.homeFragment, null)
+        }
     }
 
     private fun loadFavorites(uid: String) {
@@ -73,7 +77,7 @@ class FavoritesFragment : Fragment() {
                 if (propertyIds.isEmpty()) {
                     adapter.updateFavorites(emptySet())
                     adapter.updateData(emptyList())
-                    binding.emptyText.visibility = View.VISIBLE
+                    binding.emptyStateContainer.visibility = View.VISIBLE
                     return@addOnSuccessListener
                 }
 
@@ -86,12 +90,12 @@ class FavoritesFragment : Fragment() {
                         }
                         adapter.updateFavorites(propertyIds.toSet())
                         adapter.updateData(properties)
-                        binding.emptyText.visibility = if (properties.isEmpty()) View.VISIBLE else View.GONE
+                        binding.emptyStateContainer.visibility = if (properties.isEmpty()) View.VISIBLE else View.GONE
                     }
             }
             .addOnFailureListener {
                 if (_binding == null) return@addOnFailureListener
-                binding.emptyText.visibility = View.VISIBLE
+                binding.emptyStateContainer.visibility = View.VISIBLE
                 binding.emptyText.text = "فشل تحميل المفضلة: ${it.message}"
             }
     }
