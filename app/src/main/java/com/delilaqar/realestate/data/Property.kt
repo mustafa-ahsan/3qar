@@ -18,5 +18,6 @@ data class Property(
     var featured: Boolean = false,
     var status: String = "active",
     var reportedBy: List<String> = emptyList(),
-    var phoneNumber: String = ""
+    var phoneNumber: String = "",
+    var createdAt: Long = 0
 )

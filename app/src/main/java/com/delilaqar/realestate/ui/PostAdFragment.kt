@@ -190,7 +190,8 @@ class PostAdFragment : Fragment() {
                     "title" to title, "description" to description, "listingType" to listingType,
                     "propertyType" to propertyType, "price" to (priceText.toDoubleOrNull() ?: 0.0),
                     "cityId" to cityId, "district" to district, "status" to "active",
-                    "images" to listOf(uploadedUrl), "ownerId" to uid, "phoneNumber" to userPhone
+                    "images" to listOf(uploadedUrl), "ownerId" to uid, "phoneNumber" to userPhone,
+                    "createdAt" to System.currentTimeMillis(),
                 )
 
                 db.collection("properties").add(property)

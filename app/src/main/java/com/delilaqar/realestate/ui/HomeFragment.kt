@@ -1,7 +1,6 @@
 package com.delilaqar.realestate.ui
 
 import android.content.Intent
-import android.content.res.ColorStateList
 import android.net.Uri
 import android.os.Bundle
 import android.text.Editable
@@ -21,8 +20,10 @@ import com.delilaqar.realestate.R
 import com.delilaqar.realestate.data.Property
 import com.delilaqar.realestate.databinding.FragmentHomeBinding
 import com.delilaqar.realestate.util.navigateSafe
+import com.google.android.gms.tasks.Tasks
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
+import com.google.firebase.firestore.QuerySnapshot
 import java.util.Locale
 
 class HomeFragment : Fragment() {
@@ -35,10 +36,11 @@ class HomeFragment : Fragment() {
     private val currentFavoriteIds = mutableSetOf<String>()
     private var allProperties: List<Property> = emptyList()
 
-    // null = الكل / "sale" / "rent" / "wanted"
     private var selectedListingFilter: String? = null
-    // null = الكل / "apartment" / "villa" / "land"
     private var selectedTypeFilter: String? = null
+
+    private val searchHandler = android.os.Handler(android.os.Looper.getMainLooper())
+    private var searchRunnable: Runnable? = null
 
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?
@@ -71,9 +73,6 @@ class HomeFragment : Fragment() {
         setupSearch()
         loadFavoriteIdsThenProperties()
     }
-
-    private val searchHandler = android.os.Handler(android.os.Looper.getMainLooper())
-    private var searchRunnable: Runnable? = null
 
     private fun setupSearch() {
         binding.searchInput.addTextChangedListener(object : TextWatcher {
@@ -134,35 +133,47 @@ class HomeFragment : Fragment() {
 
     private fun loadFavoriteIdsThenProperties() {
         val uid = FirebaseAuth.getInstance().currentUser?.uid
-        if (uid == null) {
-            loadProperties()
-            return
-        }
-        db.collection("users").document(uid).collection("favorites").get()
-            .addOnSuccessListener { snapshot ->
-                currentFavoriteIds.clear()
-                currentFavoriteIds.addAll(snapshot.documents.map { it.id })
-                loadProperties()
-            }
-            .addOnFailureListener { loadProperties() }
-    }
 
-    private fun loadProperties() {
-        db.collection("properties")
+        val propertiesTask = db.collection("properties")
             .whereEqualTo("status", "active")
             .get()
-            .addOnSuccessListener { snapshot ->
-                if (_binding == null) return@addOnSuccessListener
-                allProperties = snapshot.documents.mapNotNull { doc ->
-                    doc.toObject(Property::class.java)?.apply { id = doc.id }
+
+        if (uid == null) {
+            propertiesTask.addOnSuccessListener { handlePropertiesSnapshot(it) }
+                .addOnFailureListener { handlePropertiesFailure(it) }
+            return
+        }
+
+        val favoritesTask = db.collection("users").document(uid).collection("favorites").get()
+
+        Tasks.whenAllComplete(favoritesTask, propertiesTask)
+            .addOnCompleteListener {
+                if (_binding == null) return@addOnCompleteListener
+                favoritesTask.result?.let { favSnapshot ->
+                    currentFavoriteIds.clear()
+                    currentFavoriteIds.addAll(favSnapshot.documents.map { doc -> doc.id })
                 }
-                applyFilters()
+                val propSnapshot = propertiesTask.result
+                if (propSnapshot != null) {
+                    handlePropertiesSnapshot(propSnapshot)
+                } else {
+                    handlePropertiesFailure(propertiesTask.exception ?: Exception("فشل غير معروف"))
+                }
             }
-            .addOnFailureListener {
-                if (_binding == null) return@addOnFailureListener
-                binding.emptyText.visibility = View.VISIBLE
-                binding.emptyText.text = "فشل تحميل العقارات: ${it.message}"
-            }
+    }
+
+    private fun handlePropertiesSnapshot(snapshot: QuerySnapshot) {
+        if (_binding == null) return
+        allProperties = snapshot.documents.mapNotNull { doc ->
+            doc.toObject(Property::class.java)?.apply { id = doc.id }
+        }.sortedByDescending { it.createdAt }
+        applyFilters()
+    }
+
+    private fun handlePropertiesFailure(e: Exception) {
+        if (_binding == null) return
+        binding.emptyText.visibility = View.VISIBLE
+        binding.emptyText.text = "فشل تحميل العقارات: ${e.message}"
     }
 
     private fun applyFilters() {
@@ -173,7 +184,6 @@ class HomeFragment : Fragment() {
             val matchesListing = when (selectedListingFilter) {
                 "sale" -> p.listingType == "sale"
                 "rent" -> p.listingType == "rent"
-                // ملاحظة: "مطلوب عقار" غير مدعوم بقاعدة البيانات حالياً، فما راح يطلع فيه نتائج لين نضيفه لاحقاً
                 "wanted" -> false
                 else -> true
             }
