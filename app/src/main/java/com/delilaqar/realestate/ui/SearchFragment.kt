@@ -8,6 +8,7 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.Toast
+import androidx.appcompat.widget.PopupMenu
 import androidx.fragment.app.Fragment
 import androidx.navigation.fragment.findNavController
 import androidx.recyclerview.widget.LinearLayoutManager
@@ -18,8 +19,6 @@ import com.delilaqar.realestate.util.navigateSafe
 import com.google.android.material.chip.Chip
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
-import androidx.appcompat.widget.PopupMenu
-import androidx.appcompat.widget.PopupMenu
 
 class SearchFragment : Fragment() {
     private var _binding: FragmentSearchBinding? = null
@@ -30,7 +29,6 @@ class SearchFragment : Fragment() {
     private var allProperties: List<Property> = emptyList()
     private val currentFavoriteIds = mutableSetOf<String>()
     private var selectedCityId: String? = null
-    private var sortOption: String = "newest" // newest, price_asc, price_desc
     private var sortOption: String = "newest" // newest, price_asc, price_desc
 
     private val cities = linkedMapOf(
@@ -83,9 +81,6 @@ class SearchFragment : Fragment() {
 
         setupCityChips()
         setupListeners()
-        setupAdvancedFilterToggle()
-        setupSortButton()
-        setupResetButton()
         setupAdvancedFilterToggle()
         setupSortButton()
         setupResetButton()
@@ -159,46 +154,6 @@ class SearchFragment : Fragment() {
                 }
                 applyFilters()
             }
-    }
-
-    private fun setupAdvancedFilterToggle() {
-        binding.advancedFilterToggle.setOnClickListener {
-            val isVisible = binding.advancedFilterPanel.visibility == View.VISIBLE
-            binding.advancedFilterPanel.visibility = if (isVisible) View.GONE else View.VISIBLE
-            binding.advancedFilterChevron.rotation = if (isVisible) 0f else 180f
-        }
-    }
-
-    private fun setupSortButton() {
-        binding.sortButton.setOnClickListener {
-            val popup = PopupMenu(requireContext(), it)
-            popup.menu.add(0, 1, 0, "الأحدث أولاً")
-            popup.menu.add(0, 2, 1, "الأقل سعراً")
-            popup.menu.add(0, 3, 2, "الأعلى سعراً")
-            popup.setOnMenuItemClickListener { item ->
-                when (item.itemId) {
-                    1 -> { sortOption = "newest"; binding.sortLabel.text = "الأحدث أولاً" }
-                    2 -> { sortOption = "price_asc"; binding.sortLabel.text = "الأقل سعراً" }
-                    3 -> { sortOption = "price_desc"; binding.sortLabel.text = "الأعلى سعراً" }
-                }
-                applyFilters()
-                true
-            }
-            popup.show()
-        }
-    }
-
-    private fun setupResetButton() {
-        binding.resetFiltersButton.setOnClickListener {
-            binding.searchInput.setText("")
-            binding.listingTypeFilter.check(binding.filterAllListing.id)
-            binding.propertyTypeFilter.check(binding.filterAllType.id)
-            binding.cityFilter.check(binding.filterAllCities.id)
-            binding.bedroomsFilter.check(binding.filterAnyBedrooms.id)
-            sortOption = "newest"
-            binding.sortLabel.text = "الأحدث أولاً"
-            applyFilters()
-        }
     }
 
     private fun setupAdvancedFilterToggle() {
