@@ -72,11 +72,16 @@ class HomeFragment : Fragment() {
         loadFavoriteIdsThenProperties()
     }
 
+    private val searchHandler = android.os.Handler(android.os.Looper.getMainLooper())
+    private var searchRunnable: Runnable? = null
+
     private fun setupSearch() {
         binding.searchInput.addTextChangedListener(object : TextWatcher {
             override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) {}
             override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) {
-                applyFilters()
+                searchRunnable?.let { searchHandler.removeCallbacks(it) }
+                searchRunnable = Runnable { applyFilters() }
+                searchHandler.postDelayed(searchRunnable!!, 300)
             }
             override fun afterTextChanged(s: Editable?) {}
         })
@@ -121,6 +126,10 @@ class HomeFragment : Fragment() {
 
     private fun setTypeContainerSelected(container: LinearLayout, selected: Boolean) {
         container.setBackgroundResource(if (selected) R.drawable.bg_pill_selected else R.drawable.bg_pill_unselected)
+        val label = container.getChildAt(1) as? TextView
+        label?.setTextColor(
+            ContextCompat.getColor(requireContext(), if (selected) R.color.text_primary else R.color.text_secondary)
+        )
     }
 
     private fun loadFavoriteIdsThenProperties() {
