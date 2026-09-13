@@ -15,7 +15,15 @@
       },
       "oauth_client": [
         {
-          "client_id": "868667822917-1at50efjjkq56ii83gpat7799c1c5g66.apps.googleusercontent.com",
+          "client_id": "868667822917-qcabfbnncj1lpqknno20mv04aq3e23qq.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.delilaqar.realestate",
+            "certificate_hash": "0bb771c05424a9464a7e807cf857e4915ba3fabf"
+          }
+        },
+        {
+          "client_id": "868667822917-0ueu0i7m5ustv42mh6mgpch48fmhgd78.apps.googleusercontent.com",
           "client_type": 3
         }
       ],
@@ -28,7 +36,7 @@
         "appinvite_service": {
           "other_platform_oauth_client": [
             {
-              "client_id": "868667822917-1at50efjjkq56ii83gpat7799c1c5g66.apps.googleusercontent.com",
+              "client_id": "868667822917-0ueu0i7m5ustv42mh6mgpch48fmhgd78.apps.googleusercontent.com",
               "client_type": 3
             }
           ]
