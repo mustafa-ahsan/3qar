@@ -12,6 +12,7 @@ import androidx.recyclerview.widget.LinearLayoutManager
 import com.delilaqar.realestate.R
 import com.delilaqar.realestate.data.Property
 import com.delilaqar.realestate.databinding.FragmentProfileBinding
+import com.delilaqar.realestate.util.GoogleAuthHelper
 import com.delilaqar.realestate.util.navigateSafe
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
@@ -62,11 +63,18 @@ class ProfileFragment : Fragment() {
 
                 binding.profileName.text = name
                 binding.profileEmail.text = email
-                binding.profilePhone.text = phone.ifEmpty { "لا يوجد رقم هاتف" }
+                binding.profilePhone.text = phone.ifEmpty { "لا يوجد رقم هاتف - اضغط للإضافة" }
                 binding.avatarText.text = name.firstOrNull()?.uppercase() ?: "?"
+
+                binding.profilePhone.setOnClickListener {
+                    GoogleAuthHelper.promptForPhoneNumber(requireContext(), uid) {
+                        showLoggedIn(uid)
+                    }
+                }
             }
 
         binding.logoutButton.setOnClickListener {
+            GoogleAuthHelper.getSignInClient(requireContext()).signOut()
             auth.signOut()
             showLoggedOut()
         }

@@ -99,8 +99,15 @@ class LoginFragment : Fragment() {
                         uid = user.uid,
                         name = user.displayName ?: "مستخدم",
                         email = user.email ?: "",
-                        onComplete = {
-                            if (isAdded && _binding != null) {
+                        onComplete = { isNewUser ->
+                            if (!isAdded || _binding == null) return@ensureUserDocument
+                            if (isNewUser) {
+                                GoogleAuthHelper.promptForPhoneNumber(requireContext(), user.uid) {
+                                    if (isAdded && _binding != null) {
+                                        findNavController().navigateSafe(R.id.action_login_to_home)
+                                    }
+                                }
+                            } else {
                                 findNavController().navigateSafe(R.id.action_login_to_home)
                             }
                         },
