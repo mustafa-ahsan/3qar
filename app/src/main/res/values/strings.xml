@@ -26,7 +26,7 @@
     <string name="empty_properties">لا توجد عقارات متاحة حالياً</string>
     <string name="app_header_title">عقار - المنصة العقارية</string>
     <string name="app_header_subtitle">ابحث عن منزل أحلامك وأفضل الفرص الاستثمارية</string>
-    <string name="app_badge">عقار</string>
+    <string name="app_badge">دليلك للعقار</string>
     <string name="search_hint">ابحث بالمدينة، الحي، أو نوع العقار...</string>
     <string name="filter_all_offers">جميع العروض</string>
     <string name="filter_for_sale">للبيع</string>

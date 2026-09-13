@@ -13,6 +13,7 @@ import androidx.navigation.fragment.findNavController
 import com.delilaqar.realestate.R
 import com.delilaqar.realestate.databinding.FragmentWelcomeBinding
 import com.delilaqar.realestate.util.GoogleAuthHelper
+import com.delilaqar.realestate.util.PropertyCache
 import com.delilaqar.realestate.util.navigateSafe
 import com.delilaqar.realestate.util.setOnSingleClickListener
 import com.google.android.gms.auth.api.signin.GoogleSignIn
@@ -42,6 +43,8 @@ class WelcomeFragment : Fragment() {
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
+
+        PropertyCache.preload()
 
         binding.createAccountButton.setOnSingleClickListener {
             findNavController().navigateSafe(R.id.action_welcome_to_register)

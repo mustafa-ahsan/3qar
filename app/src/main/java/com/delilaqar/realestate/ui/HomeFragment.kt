@@ -24,6 +24,7 @@ import com.google.android.gms.tasks.Tasks
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.QuerySnapshot
+import com.delilaqar.realestate.util.PropertyCache
 import java.util.Locale
 
 class HomeFragment : Fragment() {
@@ -132,6 +133,16 @@ class HomeFragment : Fragment() {
     }
 
     private fun loadFavoriteIdsThenProperties() {
+        val cached = PropertyCache.consume()
+        if (cached != null) {
+            val (props, favs) = cached
+            currentFavoriteIds.clear()
+            currentFavoriteIds.addAll(favs)
+            allProperties = props.sortedByDescending { it.createdAt }
+            applyFilters()
+            return
+        }
+
         val uid = FirebaseAuth.getInstance().currentUser?.uid
 
         val propertiesTask = db.collection("properties")
