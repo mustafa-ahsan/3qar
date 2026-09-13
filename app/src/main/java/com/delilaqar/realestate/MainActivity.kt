@@ -8,6 +8,7 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.navigation.fragment.NavHostFragment
 import androidx.navigation.ui.setupWithNavController
 import com.delilaqar.realestate.databinding.ActivityMainBinding
+import com.google.firebase.auth.FirebaseAuth
 import java.util.Locale
 
 class MainActivity : AppCompatActivity() {
@@ -29,10 +30,17 @@ class MainActivity : AppCompatActivity() {
             .findFragmentById(R.id.navHostFragment) as NavHostFragment
         val navController = navHostFragment.navController
 
+        if (FirebaseAuth.getInstance().currentUser != null &&
+            navController.currentDestination?.id == R.id.welcomeFragment
+        ) {
+            navController.navigate(R.id.action_welcome_to_home)
+        }
+
         binding.bottomNav.setupWithNavController(navController)
 
         navController.addOnDestinationChangedListener { _, destination, _ ->
-            val hideBottomNav = destination.id == R.id.loginFragment ||
+            val hideBottomNav = destination.id == R.id.welcomeFragment ||
+                destination.id == R.id.loginFragment ||
                 destination.id == R.id.registerFragment ||
                 destination.id == R.id.propertyDetailFragment
             binding.bottomNav.visibility = if (hideBottomNav) View.GONE else View.VISIBLE
