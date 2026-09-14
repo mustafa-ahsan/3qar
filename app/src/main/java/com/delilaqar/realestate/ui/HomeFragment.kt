@@ -19,12 +19,12 @@ import androidx.recyclerview.widget.RecyclerView
 import com.delilaqar.realestate.R
 import com.delilaqar.realestate.data.Property
 import com.delilaqar.realestate.databinding.FragmentHomeBinding
+import com.delilaqar.realestate.util.PropertyCache
 import com.delilaqar.realestate.util.navigateSafe
 import com.google.android.gms.tasks.Tasks
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.QuerySnapshot
-import com.delilaqar.realestate.util.PropertyCache
 import java.util.Locale
 
 class HomeFragment : Fragment() {
@@ -73,6 +73,13 @@ class HomeFragment : Fragment() {
         setupFilterChips()
         setupSearch()
         loadFavoriteIdsThenProperties()
+
+        binding.filterButton.setOnClickListener {
+            if (isAdded) findNavController().navigateSafe(R.id.searchFragment)
+        }
+        binding.calculatorButton.setOnClickListener {
+            if (isAdded) findNavController().navigateSafe(R.id.installmentCalculatorFragment)
+        }
     }
 
     private fun setupSearch() {
