@@ -16,6 +16,7 @@ import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FieldValue
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.SetOptions
+import com.delilaqar.realestate.util.CurrencyFormatter
 import java.util.Locale
 
 class PropertyDetailFragment : Fragment() {
@@ -50,7 +51,7 @@ class PropertyDetailFragment : Fragment() {
 
     private fun bindProperty(propertyId: String, property: Property) {
         binding.detailTitle.text = property.title
-        binding.detailPrice.text = "$${String.format(Locale.US, "%,.0f", property.price)}"
+        binding.detailPrice.text = CurrencyFormatter.format(property.price)
         binding.detailLocation.text = property.district
         binding.detailBedrooms.text = "🛏 ${property.bedrooms}\nغرف نوم"
         binding.detailBathrooms.text = "🚿 ${property.bathrooms}\nحمامات"
@@ -70,6 +71,18 @@ class PropertyDetailFragment : Fragment() {
                 .into(binding.detailImage)
         } else {
             binding.detailImage.setBackgroundColor(Color.DKGRAY)
+        }
+
+        binding.shareButton.setOnClickListener {
+            val shareText = "${property.title}\n" +
+                "السعر: ${CurrencyFormatter.format(property.price)}\n" +
+                "الموقع: ${property.district}\n\n" +
+                "شاهد هذا العقار على تطبيق دليلك للعقار"
+            val sendIntent = Intent(Intent.ACTION_SEND).apply {
+                type = "text/plain"
+                putExtra(Intent.EXTRA_TEXT, shareText)
+            }
+            startActivity(Intent.createChooser(sendIntent, "مشاركة الإعلان"))
         }
 
         // --- كود زر الواتساب الذكي المحدث ---
