@@ -9,6 +9,7 @@ import com.bumptech.glide.Glide
 import com.delilaqar.realestate.R
 import com.delilaqar.realestate.data.Property
 import com.delilaqar.realestate.databinding.ItemPropertyBinding
+import com.delilaqar.realestate.util.CurrencyFormatter
 import java.util.Locale
 
 class PropertyAdapter(
@@ -35,7 +36,7 @@ class PropertyAdapter(
         val context = binding.root.context
 
         binding.titleText.text = property.title
-        binding.priceText.text = "$${String.format(Locale.US, "%,.0f", property.price)}"
+        binding.priceText.text = CurrencyFormatter.format(property.price)
         binding.locationText.text = property.district
         binding.detailsText.text =
             "${property.bedrooms} غرف · ${property.bathrooms} حمامات · ${property.area.toInt()} م²"

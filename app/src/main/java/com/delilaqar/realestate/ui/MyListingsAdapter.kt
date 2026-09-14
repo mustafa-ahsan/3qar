@@ -6,6 +6,7 @@ import androidx.recyclerview.widget.RecyclerView
 import com.bumptech.glide.Glide
 import com.delilaqar.realestate.data.Property
 import com.delilaqar.realestate.databinding.ItemMyListingBinding
+import com.delilaqar.realestate.util.CurrencyFormatter
 import java.util.Locale
 
 class MyListingsAdapter(
@@ -25,7 +26,7 @@ class MyListingsAdapter(
         val binding = holder.binding
 
         binding.listingTitle.text = property.title
-        binding.listingPrice.text = "$${String.format(Locale.US, "%,.0f", property.price)}"
+        binding.listingPrice.text = CurrencyFormatter.format(property.price)
         binding.listingStatus.text = if (property.status == "active") "نشط" else "غير نشط"
 
         val imageUrl = property.images.firstOrNull()

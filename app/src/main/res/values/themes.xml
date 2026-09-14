@@ -45,6 +45,7 @@
         <item name="backgroundTint">@color/accent_green</item>
         <item name="android:textColor">@android:color/white</item>
         <item name="android:textSize">13sp</item>
+        <item name="cornerRadius">28dp</item>
     </style>
 
     <style name="PillChoiceChip" parent="Widget.MaterialComponents.Chip.Choice">

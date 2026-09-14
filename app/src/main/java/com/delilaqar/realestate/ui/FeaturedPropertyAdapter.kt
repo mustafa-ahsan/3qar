@@ -6,6 +6,7 @@ import androidx.recyclerview.widget.RecyclerView
 import com.bumptech.glide.Glide
 import com.delilaqar.realestate.data.Property
 import com.delilaqar.realestate.databinding.ItemPropertyFeaturedBinding
+import com.delilaqar.realestate.util.CurrencyFormatter
 import java.util.Locale
 
 class FeaturedPropertyAdapter(
@@ -28,7 +29,7 @@ class FeaturedPropertyAdapter(
         val binding = holder.binding
 
         binding.titleText.text = property.title
-        binding.priceText.text = "$${String.format(Locale.US, "%,.0f", property.price)}"
+        binding.priceText.text = CurrencyFormatter.format(property.price)
         binding.locationText.text = property.district
 
         val imageUrl = property.images.firstOrNull()

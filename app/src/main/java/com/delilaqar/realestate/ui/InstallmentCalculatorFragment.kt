@@ -6,6 +6,7 @@ import android.view.View
 import android.view.ViewGroup
 import androidx.fragment.app.Fragment
 import com.delilaqar.realestate.databinding.FragmentInstallmentCalculatorBinding
+import com.delilaqar.realestate.util.CurrencyFormatter
 import java.util.Locale
 
 class InstallmentCalculatorFragment : Fragment() {
@@ -80,7 +81,7 @@ class InstallmentCalculatorFragment : Fragment() {
     }
 
     private fun formatCurrency(value: Double): String {
-        return "$${String.format(Locale.US, "%,.2f", value)}"
+        return CurrencyFormatter.format(value)
     }
 
     private fun showError(message: String) {
