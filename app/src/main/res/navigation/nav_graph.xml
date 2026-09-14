@@ -95,4 +95,10 @@
             app:argType="string" />
     </fragment>
 
+    <fragment
+        android:id="@+id/installmentCalculatorFragment"
+        android:name="com.delilaqar.realestate.ui.InstallmentCalculatorFragment"
+        android:label="حاسبة الأقساط"
+        tools:layout="@layout/fragment_installment_calculator" />
+
 </navigation>
