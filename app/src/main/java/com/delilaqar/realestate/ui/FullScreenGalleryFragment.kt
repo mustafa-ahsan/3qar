@@ -45,7 +45,7 @@ class FullScreenGalleryFragment : DialogFragment() {
         val counterText = view.findViewById<TextView>(R.id.fullscreenCounterText)
         val closeButton = view.findViewById<ImageView>(R.id.fullscreenCloseButton)
 
-        pager.adapter = GalleryImageAdapter(images)
+        pager.adapter = GalleryImageAdapter(images, fullscreen = true)
         pager.setCurrentItem(startPosition, false)
         counterText.text = "${startPosition + 1} / ${images.size}"
 

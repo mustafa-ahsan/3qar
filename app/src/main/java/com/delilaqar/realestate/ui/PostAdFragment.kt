@@ -173,6 +173,9 @@ class PostAdFragment : Fragment() {
         val cityName = binding.cityInput.text?.toString()?.trim().orEmpty()
         val district = binding.districtInput.text?.toString()?.trim().orEmpty()
         val priceText = binding.priceInput.text?.toString()?.trim().orEmpty()
+        val bedroomsText = binding.bedroomsInput.text?.toString()?.trim().orEmpty()
+        val bathroomsText = binding.bathroomsInput.text?.toString()?.trim().orEmpty()
+        val areaText = binding.areaInput.text?.toString()?.trim().orEmpty()
 
         if (title.isEmpty() || cityName.isEmpty() || district.isEmpty() || priceText.isEmpty()) {
             showError("الرجاء تعبئة الحقول الأساسية")
@@ -273,6 +276,9 @@ class PostAdFragment : Fragment() {
                     "cityId" to cityId, "district" to district, "status" to "active",
                     "images" to uploadedUrls, "ownerId" to uid, "phoneNumber" to userPhone,
                     "createdAt" to System.currentTimeMillis(),
+                    "bedrooms" to (bedroomsText.toIntOrNull() ?: 0),
+                    "bathrooms" to (bathroomsText.toIntOrNull() ?: 0),
+                    "area" to (areaText.toDoubleOrNull() ?: 0.0),
                 )
 
                 db.collection("properties").add(property)
