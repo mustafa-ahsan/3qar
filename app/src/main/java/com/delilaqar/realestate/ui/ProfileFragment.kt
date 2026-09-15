@@ -13,6 +13,7 @@ import com.delilaqar.realestate.R
 import com.delilaqar.realestate.data.Property
 import com.delilaqar.realestate.databinding.FragmentProfileBinding
 import com.delilaqar.realestate.util.GoogleAuthHelper
+import com.delilaqar.realestate.util.NsfwModelManager
 import com.delilaqar.realestate.util.navigateSafe
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
@@ -23,6 +24,9 @@ class ProfileFragment : Fragment() {
     private val auth = FirebaseAuth.getInstance()
     private val db = FirebaseFirestore.getInstance()
     private lateinit var myListingsAdapter: MyListingsAdapter
+
+    private val statusHandler = android.os.Handler(android.os.Looper.getMainLooper())
+    private var statusRunnable: Runnable? = null
 
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?
@@ -79,7 +83,6 @@ class ProfileFragment : Fragment() {
             showLoggedOut()
         }
 
-
         myListingsAdapter = MyListingsAdapter(
             items = emptyList(),
             onDeleteClick = { property -> confirmDeleteListing(property) }
@@ -88,6 +91,57 @@ class ProfileFragment : Fragment() {
         binding.myListingsRecyclerView.adapter = myListingsAdapter
 
         loadMyListings(uid)
+        setupModelStatus()
+    }
+
+    private fun setupModelStatus() {
+        binding.modelRetryButton.setOnClickListener {
+            NsfwModelManager.retry(requireContext())
+            refreshModelStatus()
+        }
+        refreshModelStatus()
+    }
+
+    private fun refreshModelStatus() {
+        if (_binding == null) return
+
+        var nextDelay = 3000L
+
+        when (NsfwModelManager.state) {
+            NsfwModelManager.State.READY -> {
+                binding.modelStatusCard.visibility = View.GONE
+                return
+            }
+            NsfwModelManager.State.DOWNLOADING -> {
+                binding.modelStatusCard.visibility = View.VISIBLE
+                binding.modelProgressBar.visibility = View.VISIBLE
+                binding.modelStatusText.text = "⏳ جاري تجهيز نظام فحص الصور لأول مرة"
+                binding.modelPercentText.text = "${NsfwModelManager.progressPercent}%"
+                binding.modelProgressBar.progress = NsfwModelManager.progressPercent
+                binding.modelRetryButton.visibility = View.GONE
+                nextDelay = 800
+            }
+            NsfwModelManager.State.FAILED -> {
+                binding.modelStatusCard.visibility = View.VISIBLE
+                binding.modelProgressBar.visibility = View.GONE
+                binding.modelPercentText.text = ""
+                binding.modelStatusText.text = "⚠️ تعذّر تجهيز نظام فحص الصور بسبب مشكلة اتصال. تأكد من النت وأعد المحاولة"
+                binding.modelRetryButton.visibility = View.VISIBLE
+            }
+            NsfwModelManager.State.IDLE -> {
+                binding.modelStatusCard.visibility = View.VISIBLE
+                binding.modelProgressBar.visibility = View.VISIBLE
+                binding.modelPercentText.text = "0%"
+                binding.modelStatusText.text = "⏳ جاري تجهيز نظام فحص الصور..."
+                binding.modelRetryButton.visibility = View.GONE
+                NsfwModelManager.startBackgroundDownload(requireContext())
+                nextDelay = 800
+            }
+        }
+
+        statusRunnable?.let { statusHandler.removeCallbacks(it) }
+        statusRunnable = Runnable { refreshModelStatus() }
+        statusHandler.postDelayed(statusRunnable!!, nextDelay)
     }
 
     private fun loadMyListings(uid: String) {
@@ -115,7 +169,7 @@ class ProfileFragment : Fragment() {
         if (!isAdded) return
         AlertDialog.Builder(requireContext())
             .setTitle("حذف الإعلان")
-            .setMessage("متأكد تبي تحذف إعلان \"${property.title}\"؟ لا يمكن التراجع عن هذا الإجراء.")
+            .setMessage("هل أنت متأكد من رغبتك في حذف إعلان \"${property.title}\"؟ لا يمكن التراجع عن هذا الإجراء.")
             .setPositiveButton("حذف") { _, _ -> deleteListing(property) }
             .setNegativeButton("إلغاء", null)
             .show()
@@ -136,6 +190,7 @@ class ProfileFragment : Fragment() {
 
     override fun onDestroyView() {
         super.onDestroyView()
+        statusRunnable?.let { statusHandler.removeCallbacks(it) }
         _binding = null
     }
 }
