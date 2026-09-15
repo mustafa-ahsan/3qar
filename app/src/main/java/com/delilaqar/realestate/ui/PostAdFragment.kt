@@ -6,16 +6,22 @@ import android.net.Uri
 import android.os.Build
 import android.os.Bundle
 import android.provider.MediaStore
+import android.view.Gravity
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.ArrayAdapter
+import android.widget.FrameLayout
+import android.widget.ImageView
+import android.widget.LinearLayout
 import android.widget.Toast
+import androidx.activity.result.PickVisualMediaRequest
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.lifecycleScope
 import androidx.navigation.NavOptions
 import androidx.navigation.fragment.findNavController
+import com.bumptech.glide.Glide
 import com.delilaqar.realestate.R
 import com.delilaqar.realestate.databinding.FragmentPostAdBinding
 import com.delilaqar.realestate.util.ImgbbHelper
@@ -34,13 +40,19 @@ class PostAdFragment : Fragment() {
     private val binding get() = _binding!!
     private val db = FirebaseFirestore.getInstance()
 
-    private var selectedImageUri: Uri? = null
+    private val selectedImageUris = mutableListOf<Uri>()
 
-    private val imagePickerLauncher = registerForActivityResult(ActivityResultContracts.GetContent()) { uri: Uri? ->
-        if (uri != null) {
-            selectedImageUri = uri
-            binding.imagePreview.setImageURI(uri)
-            binding.imagePreview.visibility = View.VISIBLE
+    companion object {
+        private const val MAX_IMAGES = 8
+    }
+
+    private val imagePickerLauncher = registerForActivityResult(
+        ActivityResultContracts.PickMultipleVisualMedia(MAX_IMAGES)
+    ) { uris: List<Uri> ->
+        if (uris.isNotEmpty()) {
+            selectedImageUris.clear()
+            selectedImageUris.addAll(uris)
+            refreshImagePreviews()
         }
     }
 
@@ -83,11 +95,70 @@ class PostAdFragment : Fragment() {
         val cityAdapter = ArrayAdapter(requireContext(), android.R.layout.simple_list_item_1, cities.values.toList())
         binding.cityInput.setAdapter(cityAdapter)
 
-        binding.selectImageButton.setOnClickListener { imagePickerLauncher.launch("image/*") }
+        binding.selectImageButton.setOnClickListener {
+            imagePickerLauncher.launch(
+                PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageOnly)
+            )
+        }
         binding.submitButton.setOnSingleClickListener { submitAd() }
 
-        // نبدأ التحميل بالخلفية لو لأي سبب ما بدأ أصلاً من فتح التطبيق (احتياط)
         NsfwModelManager.startBackgroundDownload(requireContext())
+    }
+
+    private fun refreshImagePreviews() {
+        if (_binding == null) return
+        binding.imagesPreviewContainer.removeAllViews()
+
+        if (selectedImageUris.isEmpty()) {
+            binding.imagesPreviewScroll.visibility = View.GONE
+            binding.selectedImagesCountText.visibility = View.GONE
+            binding.selectImageButtonText.text = "اختيار صور العقار (صورة واحدة على الأقل)"
+            return
+        }
+
+        binding.imagesPreviewScroll.visibility = View.VISIBLE
+        binding.selectedImagesCountText.visibility = View.VISIBLE
+        binding.selectedImagesCountText.text = "${selectedImageUris.size} صورة مختارة"
+        binding.selectImageButtonText.text = "تعديل الصور المختارة"
+
+        val density = resources.displayMetrics.density
+        val thumbSize = (84 * density).toInt()
+        val margin = (6 * density).toInt()
+        val removeSize = (22 * density).toInt()
+
+        for ((index, uri) in selectedImageUris.withIndex()) {
+            val frame = FrameLayout(requireContext())
+            val frameParams = LinearLayout.LayoutParams(thumbSize, thumbSize)
+            frameParams.marginEnd = margin
+            frame.layoutParams = frameParams
+
+            val imageView = ImageView(requireContext())
+            imageView.layoutParams = FrameLayout.LayoutParams(
+                FrameLayout.LayoutParams.MATCH_PARENT,
+                FrameLayout.LayoutParams.MATCH_PARENT
+            )
+            imageView.scaleType = ImageView.ScaleType.CENTER_CROP
+            Glide.with(this).load(uri).centerCrop().into(imageView)
+            frame.addView(imageView)
+
+            val removeButton = ImageView(requireContext())
+            val removeParams = FrameLayout.LayoutParams(removeSize, removeSize)
+            removeParams.gravity = Gravity.TOP or Gravity.END
+            removeParams.topMargin = (4 * density).toInt()
+            removeParams.marginEnd = (4 * density).toInt()
+            removeButton.layoutParams = removeParams
+            removeButton.setBackgroundResource(R.drawable.bg_delete_circle)
+            removeButton.setImageResource(R.drawable.ic_delete)
+            val pad = (4 * density).toInt()
+            removeButton.setPadding(pad, pad, pad, pad)
+            removeButton.setOnClickListener {
+                selectedImageUris.removeAt(index)
+                refreshImagePreviews()
+            }
+            frame.addView(removeButton)
+
+            binding.imagesPreviewContainer.addView(frame)
+        }
     }
 
     private fun submitAd() {
@@ -108,12 +179,11 @@ class PostAdFragment : Fragment() {
             return
         }
 
-        if (selectedImageUri == null) {
+        if (selectedImageUris.isEmpty()) {
             showError("الرجاء اختيار صورة واحدة على الأقل")
             return
         }
 
-        // تحقق من حالة ملف الفحص قبل أي شي - بشفافية تامة للمستخدم
         when (NsfwModelManager.state) {
             NsfwModelManager.State.DOWNLOADING -> {
                 showError("جاري تحميل ملفات مهمة تخص رفع الصور والعقار، يمكنك متابعة نسبة التحميل من صفحة حسابي.")
@@ -148,65 +218,60 @@ class PostAdFragment : Fragment() {
 
         binding.submitButton.isEnabled = false
         val originalButtonText = binding.submitButton.text
-        binding.submitButton.text = "جاري الفحص الأمني للصورة..."
+        val uris = selectedImageUris.toList()
 
         db.collection("users").document(uid).get().addOnSuccessListener { userDoc ->
             val userPhone = userDoc.getString("phone") ?: "+9647000000000"
 
             lifecycleScope.launch {
-                val (isNsfw, debugStr) = withContext(Dispatchers.IO) {
-                    try {
-                        val bitmap = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
-                            val source = ImageDecoder.createSource(requireContext().contentResolver, selectedImageUri!!)
-                            ImageDecoder.decodeBitmap(source) { decoder, _, _ ->
-                                decoder.allocator = ImageDecoder.ALLOCATOR_SOFTWARE
-                                decoder.isMutableRequired = true
-                            }
-                        } else {
-                            MediaStore.Images.Media.getBitmap(requireContext().contentResolver, selectedImageUri!!)
-                        }
+                for ((index, uri) in uris.withIndex()) {
+                    binding.submitButton.text = "جاري فحص الصورة ${index + 1} من ${uris.size}..."
 
-                        val softwareBitmap = bitmap.copy(Bitmap.Config.ARGB_8888, true) ?: bitmap
-                        val detector = NsfwDetector(requireContext())
-                        val result = detector.isNsfw(softwareBitmap)
-                        detector.close()
-                        result
-                    } catch (e: Exception) {
-                        e.printStackTrace()
-                        Pair(true, "Exception: ${e.message}")
+                    val (isNsfw, debugStr) = withContext(Dispatchers.IO) {
+                        try {
+                            val bitmap = decodeBitmap(uri)
+                            val detector = NsfwDetector(requireContext())
+                            val result = detector.isNsfw(bitmap)
+                            detector.close()
+                            result
+                        } catch (e: Exception) {
+                            e.printStackTrace()
+                            Pair(true, "Exception: ${e.message}")
+                        }
+                    }
+
+                    if (debugStr == "MODEL_NOT_READY") {
+                        showError("جاري تحميل ملفات مهمة تخص رفع الصور والعقار، يمكنك متابعة نسبة التحميل من صفحة حسابي.")
+                        binding.submitButton.isEnabled = true
+                        binding.submitButton.text = originalButtonText
+                        return@launch
+                    }
+                    if (isNsfw) {
+                        showError("عذراً! تم حظر نشر الإعلان لأن الصورة رقم ${index + 1} تحتوي على مشاهد غير لائقة.")
+                        binding.submitButton.isEnabled = true
+                        binding.submitButton.text = originalButtonText
+                        return@launch
                     }
                 }
 
-                if (debugStr == "MODEL_NOT_READY") {
-                    showError("جاري تحميل ملفات مهمة تخص رفع الصور والعقار، يمكنك متابعة نسبة التحميل من صفحة حسابي.")
-                    binding.submitButton.isEnabled = true
-                    binding.submitButton.text = originalButtonText
-                    return@launch
-                }
-
-                if (isNsfw) {
-                    showError("عذراً! تم حظر نشر الإعلان لأن الصورة تحتوي على مشاهد غير لائقة.")
-                    binding.submitButton.isEnabled = true
-                    binding.submitButton.text = originalButtonText
-                    return@launch
-                }
-
-                binding.submitButton.text = "جاري الرفع والنشر..."
-
-                val uploadedUrl = ImgbbHelper.uploadImage(requireContext(), selectedImageUri!!)
-
-                if (uploadedUrl == null) {
-                    showError("فشل رفع الصورة.")
-                    binding.submitButton.isEnabled = true
-                    binding.submitButton.text = originalButtonText
-                    return@launch
+                val uploadedUrls = mutableListOf<String>()
+                for ((index, uri) in uris.withIndex()) {
+                    binding.submitButton.text = "جاري رفع الصورة ${index + 1} من ${uris.size}..."
+                    val url = ImgbbHelper.uploadImage(requireContext(), uri)
+                    if (url == null) {
+                        showError("فشل رفع الصورة رقم ${index + 1}. تأكد من اتصالك بالإنترنت وحاول مرة أخرى.")
+                        binding.submitButton.isEnabled = true
+                        binding.submitButton.text = originalButtonText
+                        return@launch
+                    }
+                    uploadedUrls.add(url)
                 }
 
                 val property = hashMapOf(
                     "title" to title, "description" to description, "listingType" to listingType,
                     "propertyType" to propertyType, "price" to (priceText.toDoubleOrNull() ?: 0.0),
                     "cityId" to cityId, "district" to district, "status" to "active",
-                    "images" to listOf(uploadedUrl), "ownerId" to uid, "phoneNumber" to userPhone,
+                    "images" to uploadedUrls, "ownerId" to uid, "phoneNumber" to userPhone,
                     "createdAt" to System.currentTimeMillis(),
                 )
 
@@ -228,6 +293,19 @@ class PostAdFragment : Fragment() {
             binding.submitButton.isEnabled = true
             binding.submitButton.text = originalButtonText
         }
+    }
+
+    private fun decodeBitmap(uri: Uri): Bitmap {
+        val bitmap = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
+            val source = ImageDecoder.createSource(requireContext().contentResolver, uri)
+            ImageDecoder.decodeBitmap(source) { decoder, _, _ ->
+                decoder.allocator = ImageDecoder.ALLOCATOR_SOFTWARE
+                decoder.isMutableRequired = true
+            }
+        } else {
+            MediaStore.Images.Media.getBitmap(requireContext().contentResolver, uri)
+        }
+        return bitmap.copy(Bitmap.Config.ARGB_8888, true) ?: bitmap
     }
 
     private fun showError(message: String) {

@@ -1,23 +1,22 @@
 package com.delilaqar.realestate.ui
 
 import android.content.Intent
-import android.graphics.Color
 import android.net.Uri
 import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.widget.ImageView
 import android.widget.Toast
 import androidx.fragment.app.Fragment
-import com.bumptech.glide.Glide
+import androidx.viewpager2.widget.ViewPager2
 import com.delilaqar.realestate.data.Property
 import com.delilaqar.realestate.databinding.FragmentPropertyDetailBinding
+import com.delilaqar.realestate.util.CurrencyFormatter
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FieldValue
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.SetOptions
-import com.delilaqar.realestate.util.CurrencyFormatter
-import java.util.Locale
 
 class PropertyDetailFragment : Fragment() {
     private var _binding: FragmentPropertyDetailBinding? = null
@@ -61,17 +60,7 @@ class PropertyDetailFragment : Fragment() {
         binding.detailPropertyTypeBadge.text = propertyTypeLabel(property.propertyType)
         binding.detailListingTypeBadge.text = if (property.listingType == "rent") "للإيجار" else "للبيع"
 
-        val imageUrl = property.images.firstOrNull()
-        if (!imageUrl.isNullOrEmpty()) {
-            Glide.with(this)
-                .load(imageUrl)
-                .placeholder(android.R.color.darker_gray)
-                .error(android.R.drawable.ic_dialog_alert)
-                .centerCrop()
-                .into(binding.detailImage)
-        } else {
-            binding.detailImage.setBackgroundColor(Color.DKGRAY)
-        }
+        setupImageGallery(property.images)
 
         binding.shareButton.setOnClickListener {
             val shareText = "${property.title}\n" +
@@ -85,28 +74,19 @@ class PropertyDetailFragment : Fragment() {
             startActivity(Intent.createChooser(sendIntent, "مشاركة الإعلان"))
         }
 
-        // --- كود زر الواتساب الذكي المحدث ---
         binding.whatsappDetailButton.setOnClickListener {
-            // 1. جلب الرقم وإزالة أي مسافات فارغة منه
             var phone = property.phoneNumber.trim().ifEmpty { "+9647000000000" }
-            
-            // 2. تعديل ذكي للرقم ليتوافق مع متطلبات واتساب الدولية
             if (phone.startsWith("07")) {
-                // إذا كان يبدأ بـ 07، نحذف الصفر ونضيف رمز الدولة
-                phone = "+964" + phone.substring(1) 
+                phone = "+964" + phone.substring(1)
             } else if (phone.startsWith("00964")) {
-                // إذا كتبه المستخدم بصيغة 00964، نحولها 
                 phone = "+964" + phone.substring(5)
             } else if (!phone.startsWith("+")) {
-                // كإجراء احتياطي لأي رقم لا يبدأ بـ +
                 phone = "+964$phone"
             }
-            
-            // رسالة جاهزة للبائع
+
             val message = "مرحباً، أنا مهتم بعقارك (${property.title}) المعروض في تطبيق عقار."
-            
+
             try {
-                // فتح تطبيق واتساب
                 val uri = Uri.parse("https://api.whatsapp.com/send?phone=$phone&text=${Uri.encode(message)}")
                 val intent = Intent(Intent.ACTION_VIEW, uri)
                 startActivity(intent)
@@ -115,7 +95,6 @@ class PropertyDetailFragment : Fragment() {
             }
         }
 
-        // --- كود زر الإبلاغ الذكي ---
         binding.reportButton.setOnClickListener {
             val uid = FirebaseAuth.getInstance().currentUser?.uid
             if (uid == null) {
@@ -123,13 +102,11 @@ class PropertyDetailFragment : Fragment() {
                 return@setOnClickListener
             }
 
-            // إيقاف الزر لتجنب الضغط المتكرر
             binding.reportButton.isEnabled = false
             binding.reportButton.text = "جاري الإبلاغ..."
 
             val docRef = db.collection("properties").document(propertyId)
 
-            // قراءة البيانات من السيرفر مباشرة
             docRef.get().addOnSuccessListener { document ->
                 val currentReports = document.get("reportedBy") as? List<*>
                 val reportsCount = currentReports?.size ?: 0
@@ -138,12 +115,10 @@ class PropertyDetailFragment : Fragment() {
                     "reportedBy" to FieldValue.arrayUnion(uid)
                 )
 
-                // الإخفاء إذا وصل الحد
                 if (reportsCount >= 3) {
                     updates["status"] = "hidden"
                 }
 
-                // إرسال التحديث
                 docRef.set(updates, SetOptions.merge())
                     .addOnSuccessListener {
                         if (isAdded) Toast.makeText(requireContext(), "🚩 تم استلام البلاغ.", Toast.LENGTH_LONG).show()
@@ -156,6 +131,59 @@ class PropertyDetailFragment : Fragment() {
                     }
             }
         }
+    }
+
+    private fun setupImageGallery(images: List<String>) {
+        val displayImages = images.ifEmpty { listOf("") }
+
+        binding.detailImagePager.adapter = GalleryImageAdapter(displayImages)
+
+        binding.dotsIndicatorContainer.removeAllViews()
+
+        if (displayImages.size <= 1) {
+            binding.dotsIndicatorContainer.visibility = View.GONE
+            binding.imageCounterText.visibility = View.GONE
+            return
+        }
+
+        binding.dotsIndicatorContainer.visibility = View.VISIBLE
+        binding.imageCounterText.visibility = View.VISIBLE
+        binding.imageCounterText.text = "1 / ${displayImages.size}"
+
+        val dots = mutableListOf<ImageView>()
+        val density = resources.displayMetrics.density
+        val margin = (4 * density).toInt()
+
+        for (i in displayImages.indices) {
+            val dot = ImageView(requireContext())
+            val params = android.widget.LinearLayout.LayoutParams(
+                android.widget.LinearLayout.LayoutParams.WRAP_CONTENT,
+                android.widget.LinearLayout.LayoutParams.WRAP_CONTENT
+            )
+            params.marginStart = margin
+            params.marginEnd = margin
+            dot.layoutParams = params
+            dot.setImageResource(
+                if (i == 0) com.delilaqar.realestate.R.drawable.dot_selected
+                else com.delilaqar.realestate.R.drawable.dot_unselected
+            )
+            binding.dotsIndicatorContainer.addView(dot)
+            dots.add(dot)
+        }
+
+        binding.detailImagePager.registerOnPageChangeCallback(object : ViewPager2.OnPageChangeCallback() {
+            override fun onPageSelected(position: Int) {
+                super.onPageSelected(position)
+                if (_binding == null) return
+                for (i in dots.indices) {
+                    dots[i].setImageResource(
+                        if (i == position) com.delilaqar.realestate.R.drawable.dot_selected
+                        else com.delilaqar.realestate.R.drawable.dot_unselected
+                    )
+                }
+                binding.imageCounterText.text = "${position + 1} / ${displayImages.size}"
+            }
+        })
     }
 
     private fun propertyTypeLabel(type: String): String = when (type) {

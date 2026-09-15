@@ -341,7 +341,7 @@
             </LinearLayout>
         </com.google.android.material.card.MaterialCardView>
 
-        <!-- صورة العقار -->
+        <!-- صور العقار -->
         <com.google.android.material.card.MaterialCardView
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
@@ -360,7 +360,7 @@
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:layout_marginBottom="12dp"
-                    android:text="صورة العقار"
+                    android:text="صور العقار"
                     android:textColor="@color/text_primary"
                     android:textSize="14sp"
                     android:textStyle="bold" />
@@ -376,23 +376,38 @@
                     android:focusable="true">
 
                     <TextView
+                        android:id="@+id/selectImageButtonText"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:text="اختيار صورة للعقار (مطلوب)"
+                        android:text="اختيار صور العقار (صورة واحدة على الأقل)"
                         android:textColor="@color/primary_blue"
                         android:textSize="14sp"
                         android:textStyle="bold" />
                 </LinearLayout>
 
-                <ImageView
-                    android:id="@+id/imagePreview"
+                <TextView
+                    android:id="@+id/selectedImagesCountText"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="8dp"
+                    android:textColor="@color/text_secondary"
+                    android:textSize="12sp"
+                    android:visibility="gone" />
+
+                <HorizontalScrollView
+                    android:id="@+id/imagesPreviewScroll"
                     android:layout_width="match_parent"
-                    android:layout_height="200dp"
+                    android:layout_height="wrap_content"
                     android:layout_marginTop="10dp"
-                    android:scaleType="centerCrop"
-                    android:visibility="gone"
-                    android:background="@color/surface_card_light"
-                    android:contentDescription="معاينة الصورة" />
+                    android:scrollbars="none"
+                    android:visibility="gone">
+
+                    <LinearLayout
+                        android:id="@+id/imagesPreviewContainer"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:orientation="horizontal" />
+                </HorizontalScrollView>
             </LinearLayout>
         </com.google.android.material.card.MaterialCardView>
 

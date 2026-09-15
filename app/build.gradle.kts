@@ -43,6 +43,7 @@ android {
 
 dependencies {
     implementation("org.tensorflow:tensorflow-lite:2.14.0")
+    implementation("androidx.viewpager2:viewpager2:1.1.0")
     implementation("com.google.android.gms:play-services-auth:21.2.0")
     implementation("org.tensorflow:tensorflow-lite-support:0.4.4")
     implementation("com.squareup.okhttp3:okhttp:4.12.0")
