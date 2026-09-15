@@ -20,6 +20,7 @@ import com.delilaqar.realestate.R
 import com.delilaqar.realestate.databinding.FragmentPostAdBinding
 import com.delilaqar.realestate.util.ImgbbHelper
 import com.delilaqar.realestate.util.NsfwDetector
+import com.delilaqar.realestate.util.NsfwModelManager
 import com.delilaqar.realestate.util.navigateSafe
 import com.delilaqar.realestate.util.setOnSingleClickListener
 import com.google.firebase.auth.FirebaseAuth
@@ -84,6 +85,9 @@ class PostAdFragment : Fragment() {
 
         binding.selectImageButton.setOnClickListener { imagePickerLauncher.launch("image/*") }
         binding.submitButton.setOnSingleClickListener { submitAd() }
+
+        // نبدأ التحميل بالخلفية لو لأي سبب ما بدأ أصلاً من فتح التطبيق (احتياط)
+        NsfwModelManager.startBackgroundDownload(requireContext())
     }
 
     private fun submitAd() {
@@ -98,7 +102,7 @@ class PostAdFragment : Fragment() {
         val cityName = binding.cityInput.text?.toString()?.trim().orEmpty()
         val district = binding.districtInput.text?.toString()?.trim().orEmpty()
         val priceText = binding.priceInput.text?.toString()?.trim().orEmpty()
-        
+
         if (title.isEmpty() || cityName.isEmpty() || district.isEmpty() || priceText.isEmpty()) {
             showError("الرجاء تعبئة الحقول الأساسية")
             return
@@ -107,6 +111,27 @@ class PostAdFragment : Fragment() {
         if (selectedImageUri == null) {
             showError("الرجاء اختيار صورة واحدة على الأقل")
             return
+        }
+
+        // تحقق من حالة ملف الفحص قبل أي شي - بشفافية تامة للمستخدم
+        when (NsfwModelManager.state) {
+            NsfwModelManager.State.DOWNLOADING -> {
+                showError("جاري تجهيز نظام فحص الصور لأول مرة (يحدث مرة واحدة فقط)، يرجى المحاولة خلال دقائق قليلة.")
+                return
+            }
+            NsfwModelManager.State.FAILED -> {
+                showError("تعذّر تجهيز نظام فحص الصور بسبب مشكلة اتصال سابقة. جاري إعادة المحاولة تلقائياً، حاول النشر خلال قليل.")
+                NsfwModelManager.retry(requireContext())
+                return
+            }
+            NsfwModelManager.State.IDLE -> {
+                if (!NsfwModelManager.isReady(requireContext())) {
+                    showError("جاري تجهيز نظام فحص الصور، يرجى المحاولة خلال دقائق قليلة.")
+                    NsfwModelManager.startBackgroundDownload(requireContext())
+                    return
+                }
+            }
+            NsfwModelManager.State.READY -> { /* تكمل عادي */ }
         }
 
         val cityId = cities.entries.firstOrNull { it.value == cityName }?.key ?: return
@@ -121,18 +146,6 @@ class PostAdFragment : Fragment() {
             else -> "apartment"
         }
 
-        try {
-            val checkStream = requireContext().contentResolver.openInputStream(selectedImageUri!!)
-            val exifCheck = checkStream?.let { androidx.exifinterface.media.ExifInterface(it) }
-            val orientationValue = exifCheck?.getAttributeInt(
-                androidx.exifinterface.media.ExifInterface.TAG_ORIENTATION, -1
-            ) ?: -1
-            checkStream?.close()
-            Toast.makeText(requireContext(), "قيمة الدوران EXIF: $orientationValue", Toast.LENGTH_LONG).show()
-        } catch (e: Exception) {
-            Toast.makeText(requireContext(), "خطأ EXIF: ${e.message}", Toast.LENGTH_LONG).show()
-        }
-
         binding.submitButton.isEnabled = false
         val originalButtonText = binding.submitButton.text
         binding.submitButton.text = "جاري الفحص الأمني للصورة..."
@@ -145,7 +158,6 @@ class PostAdFragment : Fragment() {
                     try {
                         val bitmap = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
                             val source = ImageDecoder.createSource(requireContext().contentResolver, selectedImageUri!!)
-                            // إجبار الأندرويد على استخدام Software Bitmap ليتوافق مع الذكاء الاصطناعي
                             ImageDecoder.decodeBitmap(source) { decoder, _, _ ->
                                 decoder.allocator = ImageDecoder.ALLOCATOR_SOFTWARE
                                 decoder.isMutableRequired = true
@@ -153,7 +165,7 @@ class PostAdFragment : Fragment() {
                         } else {
                             MediaStore.Images.Media.getBitmap(requireContext().contentResolver, selectedImageUri!!)
                         }
-                        
+
                         val softwareBitmap = bitmap.copy(Bitmap.Config.ARGB_8888, true) ?: bitmap
                         val detector = NsfwDetector(requireContext())
                         val result = detector.isNsfw(softwareBitmap)
@@ -161,12 +173,16 @@ class PostAdFragment : Fragment() {
                         result
                     } catch (e: Exception) {
                         e.printStackTrace()
-                        Pair(true, "Exception: ${e.message}") 
+                        Pair(true, "Exception: ${e.message}")
                     }
                 }
 
-                // عرض الأرقام على الشاشة لكي نقرأها
-                Toast.makeText(requireContext(), "أرقام الفحص: $debugStr", Toast.LENGTH_LONG).show()
+                if (debugStr == "MODEL_NOT_READY") {
+                    showError("جاري تجهيز نظام فحص الصور، يرجى المحاولة خلال دقائق قليلة.")
+                    binding.submitButton.isEnabled = true
+                    binding.submitButton.text = originalButtonText
+                    return@launch
+                }
 
                 if (isNsfw) {
                     showError("عذراً! تم حظر نشر الإعلان لأن الصورة تحتوي على مشاهد غير لائقة.")

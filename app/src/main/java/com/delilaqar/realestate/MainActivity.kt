@@ -9,6 +9,7 @@ import androidx.navigation.fragment.NavHostFragment
 import androidx.navigation.ui.setupWithNavController
 import com.delilaqar.realestate.databinding.ActivityMainBinding
 import com.google.firebase.auth.FirebaseAuth
+import com.delilaqar.realestate.util.NsfwModelManager
 import java.util.Locale
 
 class MainActivity : AppCompatActivity() {
@@ -25,6 +26,8 @@ class MainActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         binding = ActivityMainBinding.inflate(layoutInflater)
         setContentView(binding.root)
+
+        NsfwModelManager.startBackgroundDownload(applicationContext)
 
         val navHostFragment = supportFragmentManager
             .findFragmentById(R.id.navHostFragment) as NavHostFragment
