@@ -115,7 +115,7 @@ class ProfileFragment : Fragment() {
             NsfwModelManager.State.DOWNLOADING -> {
                 binding.modelStatusCard.visibility = View.VISIBLE
                 binding.modelProgressBar.visibility = View.VISIBLE
-                binding.modelStatusText.text = "⏳ جاري تجهيز نظام فحص الصور لأول مرة"
+                binding.modelStatusText.text = "⏳ جاري تحميل ملفات مهمة تخص رفع الصور والعقار"
                 binding.modelPercentText.text = "${NsfwModelManager.progressPercent}%"
                 binding.modelProgressBar.progress = NsfwModelManager.progressPercent
                 binding.modelRetryButton.visibility = View.GONE
@@ -132,7 +132,7 @@ class ProfileFragment : Fragment() {
                 binding.modelStatusCard.visibility = View.VISIBLE
                 binding.modelProgressBar.visibility = View.VISIBLE
                 binding.modelPercentText.text = "0%"
-                binding.modelStatusText.text = "⏳ جاري تجهيز نظام فحص الصور..."
+                binding.modelStatusText.text = "⏳ جاري تحميل ملفات مهمة تخص رفع الصور والعقار..."
                 binding.modelRetryButton.visibility = View.GONE
                 NsfwModelManager.startBackgroundDownload(requireContext())
                 nextDelay = 800

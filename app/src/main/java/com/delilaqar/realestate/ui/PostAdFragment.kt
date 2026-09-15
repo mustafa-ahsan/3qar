@@ -116,17 +116,17 @@ class PostAdFragment : Fragment() {
         // تحقق من حالة ملف الفحص قبل أي شي - بشفافية تامة للمستخدم
         when (NsfwModelManager.state) {
             NsfwModelManager.State.DOWNLOADING -> {
-                showError("جاري تجهيز نظام فحص الصور لأول مرة (يحدث مرة واحدة فقط)، يرجى المحاولة خلال دقائق قليلة.")
+                showError("جاري تحميل ملفات مهمة تخص رفع الصور والعقار، يمكنك متابعة نسبة التحميل من صفحة حسابي.")
                 return
             }
             NsfwModelManager.State.FAILED -> {
-                showError("تعذّر تجهيز نظام فحص الصور بسبب مشكلة اتصال سابقة. جاري إعادة المحاولة تلقائياً، حاول النشر خلال قليل.")
+                showError("تعذّر تحميل الملفات المطلوبة بسبب مشكلة اتصال. يمكنك متابعة الحالة وإعادة المحاولة من صفحة حسابي.")
                 NsfwModelManager.retry(requireContext())
                 return
             }
             NsfwModelManager.State.IDLE -> {
                 if (!NsfwModelManager.isReady(requireContext())) {
-                    showError("جاري تجهيز نظام فحص الصور، يرجى المحاولة خلال دقائق قليلة.")
+                    showError("جاري تحميل ملفات مهمة تخص رفع الصور والعقار، يمكنك متابعة نسبة التحميل من صفحة حسابي.")
                     NsfwModelManager.startBackgroundDownload(requireContext())
                     return
                 }
@@ -178,7 +178,7 @@ class PostAdFragment : Fragment() {
                 }
 
                 if (debugStr == "MODEL_NOT_READY") {
-                    showError("جاري تجهيز نظام فحص الصور، يرجى المحاولة خلال دقائق قليلة.")
+                    showError("جاري تحميل ملفات مهمة تخص رفع الصور والعقار، يمكنك متابعة نسبة التحميل من صفحة حسابي.")
                     binding.submitButton.isEnabled = true
                     binding.submitButton.text = originalButtonText
                     return@launch
