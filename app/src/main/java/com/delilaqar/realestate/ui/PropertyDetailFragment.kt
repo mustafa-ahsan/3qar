@@ -135,8 +135,14 @@ class PropertyDetailFragment : Fragment() {
 
     private fun setupImageGallery(images: List<String>) {
         val displayImages = images.ifEmpty { listOf("") }
+        val hasRealImages = images.isNotEmpty()
 
-        binding.detailImagePager.adapter = GalleryImageAdapter(displayImages)
+        binding.detailImagePager.adapter = GalleryImageAdapter(displayImages) { position ->
+            if (hasRealImages && isAdded) {
+                FullScreenGalleryFragment.newInstance(ArrayList(images), position)
+                    .show(parentFragmentManager, "fullscreen_gallery")
+            }
+        }
 
         binding.dotsIndicatorContainer.removeAllViews()
 
