@@ -3,6 +3,7 @@ package com.delilaqar.realestate.ui
 import android.app.Activity
 import android.content.Intent
 import android.os.Bundle
+import android.widget.Toast
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -46,6 +47,7 @@ class LoginFragment : Fragment() {
             findNavController().navigateSafe(R.id.action_login_to_register)
         }
         binding.googleSignInButton.setOnSingleClickListener { startGoogleSignIn() }
+        binding.forgotPasswordText.setOnSingleClickListener { showForgotPasswordDialog() }
     }
 
     private fun attemptLogin() {
@@ -122,6 +124,42 @@ class LoginFragment : Fragment() {
         } catch (e: ApiException) {
             if (_binding != null) showError("فشل تسجيل الدخول عبر Google: ${e.message}")
         }
+    }
+
+    private fun showForgotPasswordDialog() {
+        val prefill = binding.emailInput.text?.toString()?.trim().orEmpty()
+        val input = com.google.android.material.textfield.TextInputEditText(requireContext()).apply {
+            hint = "البريد الإلكتروني"
+            setText(prefill)
+            inputType = android.text.InputType.TYPE_TEXT_VARIATION_EMAIL_ADDRESS or android.text.InputType.TYPE_CLASS_TEXT
+        }
+        val density = resources.displayMetrics.density
+        val padding = (20 * density).toInt()
+        val container = android.widget.FrameLayout(requireContext()).apply {
+            setPadding(padding, padding / 2, padding, 0)
+            addView(input)
+        }
+
+        androidx.appcompat.app.AlertDialog.Builder(requireContext())
+            .setTitle("استرجاع كلمة المرور")
+            .setMessage("أدخل بريدك الإلكتروني وسنرسل لك رابط إعادة تعيين كلمة المرور")
+            .setView(container)
+            .setPositiveButton("إرسال") { _, _ ->
+                val email = input.text?.toString()?.trim().orEmpty()
+                if (email.isEmpty()) {
+                    if (isAdded) Toast.makeText(requireContext(), "يرجى إدخال بريد إلكتروني صحيح", Toast.LENGTH_SHORT).show()
+                    return@setPositiveButton
+                }
+                auth.sendPasswordResetEmail(email)
+                    .addOnSuccessListener {
+                        if (isAdded) Toast.makeText(requireContext(), "تم إرسال رابط إعادة التعيين إلى بريدك الإلكتروني", Toast.LENGTH_LONG).show()
+                    }
+                    .addOnFailureListener { e ->
+                        if (isAdded) Toast.makeText(requireContext(), "فشل الإرسال: ${e.message}", Toast.LENGTH_LONG).show()
+                    }
+            }
+            .setNegativeButton("إلغاء", null)
+            .show()
     }
 
     private fun showError(message: String) {
