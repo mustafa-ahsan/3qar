@@ -59,6 +59,16 @@
         </LinearLayout>
 
         <ImageView
+            android:id="@+id/editButton"
+            android:layout_width="40dp"
+            android:layout_height="40dp"
+            android:layout_marginEnd="8dp"
+            android:padding="10dp"
+            android:background="@drawable/bg_edit_circle"
+            android:src="@drawable/ic_edit"
+            android:contentDescription="تعديل الإعلان" />
+
+        <ImageView
             android:id="@+id/deleteButton"
             android:layout_width="40dp"
             android:layout_height="40dp"

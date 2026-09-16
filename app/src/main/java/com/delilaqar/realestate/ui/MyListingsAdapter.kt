@@ -7,11 +7,11 @@ import com.bumptech.glide.Glide
 import com.delilaqar.realestate.data.Property
 import com.delilaqar.realestate.databinding.ItemMyListingBinding
 import com.delilaqar.realestate.util.CurrencyFormatter
-import java.util.Locale
 
 class MyListingsAdapter(
     private var items: List<Property>,
-    private val onDeleteClick: (Property) -> Unit
+    private val onDeleteClick: (Property) -> Unit,
+    private val onEditClick: (Property) -> Unit
 ) : RecyclerView.Adapter<MyListingsAdapter.ViewHolder>() {
 
     inner class ViewHolder(val binding: ItemMyListingBinding) : RecyclerView.ViewHolder(binding.root)
@@ -35,6 +35,7 @@ class MyListingsAdapter(
         }
 
         binding.deleteButton.setOnClickListener { onDeleteClick(property) }
+        binding.editButton.setOnClickListener { onEditClick(property) }
     }
 
     override fun getItemCount(): Int = items.size

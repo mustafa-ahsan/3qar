@@ -85,7 +85,11 @@ class ProfileFragment : Fragment() {
 
         myListingsAdapter = MyListingsAdapter(
             items = emptyList(),
-            onDeleteClick = { property -> confirmDeleteListing(property) }
+            onDeleteClick = { property -> confirmDeleteListing(property) },
+            onEditClick = { property ->
+                val bundle = Bundle().apply { putString("propertyId", property.id) }
+                findNavController().navigateSafe(R.id.postAdFragment, bundle)
+            }
         )
         binding.myListingsRecyclerView.layoutManager = LinearLayoutManager(requireContext())
         binding.myListingsRecyclerView.adapter = myListingsAdapter
