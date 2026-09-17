@@ -23,8 +23,9 @@ import com.delilaqar.realestate.util.PropertyCache
 import com.delilaqar.realestate.util.navigateSafe
 import com.google.android.gms.tasks.Tasks
 import com.google.firebase.auth.FirebaseAuth
+import com.google.firebase.firestore.DocumentSnapshot
 import com.google.firebase.firestore.FirebaseFirestore
-import com.google.firebase.firestore.QuerySnapshot
+import com.google.firebase.firestore.Query
 import java.util.Locale
 
 class HomeFragment : Fragment() {
@@ -35,7 +36,12 @@ class HomeFragment : Fragment() {
     private lateinit var adapter: PropertyAdapter
     private lateinit var featuredAdapter: FeaturedPropertyAdapter
     private val currentFavoriteIds = mutableSetOf<String>()
-    private var allProperties: List<Property> = emptyList()
+
+    private val allProperties = mutableListOf<Property>()
+    private val allFeaturedProperties = mutableListOf<Property>()
+    private var lastVisibleDoc: DocumentSnapshot? = null
+    private var reachedEnd = false
+    private var isLoadingMore = false
 
     private var selectedListingFilter: String? = null
     private var selectedTypeFilter: String? = null
@@ -72,6 +78,7 @@ class HomeFragment : Fragment() {
 
         setupFilterChips()
         setupSearch()
+        setupScrollPagination()
         loadFavoriteIdsThenProperties()
 
         binding.filterButton.setOnClickListener {
@@ -80,6 +87,18 @@ class HomeFragment : Fragment() {
         binding.calculatorButton.setOnClickListener {
             if (isAdded) findNavController().navigateSafe(R.id.installmentCalculatorFragment)
         }
+    }
+
+    private fun setupScrollPagination() {
+        binding.homeScrollView.setOnScrollChangeListener(
+            androidx.core.widget.NestedScrollView.OnScrollChangeListener { v, _, scrollY, _, _ ->
+                val content = v.getChildAt(0) ?: return@OnScrollChangeListener
+                val threshold = (80 * resources.displayMetrics.density).toInt()
+                if (scrollY + v.height + threshold >= content.height) {
+                    loadMoreProperties()
+                }
+            }
+        )
     }
 
     private fun setupSearch() {
@@ -142,50 +161,101 @@ class HomeFragment : Fragment() {
     private fun loadFavoriteIdsThenProperties() {
         val cached = PropertyCache.consume()
         if (cached != null) {
-            val (props, favs) = cached
             currentFavoriteIds.clear()
-            currentFavoriteIds.addAll(favs)
-            allProperties = props.sortedByDescending { it.createdAt }
+            currentFavoriteIds.addAll(cached.favorites)
+            allProperties.clear()
+            allProperties.addAll(cached.latest)
+            allFeaturedProperties.clear()
+            allFeaturedProperties.addAll(cached.featured)
+            lastVisibleDoc = cached.lastDoc
+            reachedEnd = cached.reachedEnd
             applyFilters()
             return
         }
 
         val uid = FirebaseAuth.getInstance().currentUser?.uid
 
-        val propertiesTask = db.collection("properties")
+        val latestTask = db.collection("properties")
             .whereEqualTo("status", "active")
+            .orderBy("createdAt", Query.Direction.DESCENDING)
+            .limit(PropertyCache.PAGE_SIZE)
             .get()
 
-        if (uid == null) {
-            propertiesTask.addOnSuccessListener { handlePropertiesSnapshot(it) }
-                .addOnFailureListener { handlePropertiesFailure(it) }
-            return
-        }
+        val featuredTask = db.collection("properties")
+            .whereEqualTo("status", "active")
+            .whereEqualTo("featured", true)
+            .get()
 
-        val favoritesTask = db.collection("users").document(uid).collection("favorites").get()
+        val favoritesTask = if (uid != null) {
+            db.collection("users").document(uid).collection("favorites").get()
+        } else null
 
-        Tasks.whenAllComplete(favoritesTask, propertiesTask)
+        val tasks = listOfNotNull(latestTask, featuredTask, favoritesTask)
+
+        Tasks.whenAllComplete(tasks)
             .addOnCompleteListener {
                 if (_binding == null) return@addOnCompleteListener
-                favoritesTask.result?.let { favSnapshot ->
+
+                favoritesTask?.result?.let { favSnapshot ->
                     currentFavoriteIds.clear()
-                    currentFavoriteIds.addAll(favSnapshot.documents.map { doc -> doc.id })
+                    currentFavoriteIds.addAll(favSnapshot.documents.map { it.id })
                 }
-                val propSnapshot = propertiesTask.result
-                if (propSnapshot != null) {
-                    handlePropertiesSnapshot(propSnapshot)
+
+                val latestSnapshot = latestTask.result
+                if (latestSnapshot != null) {
+                    allProperties.clear()
+                    allProperties.addAll(latestSnapshot.documents.mapNotNull { doc ->
+                        doc.toObject(Property::class.java)?.apply { id = doc.id }
+                    })
+                    lastVisibleDoc = latestSnapshot.documents.lastOrNull()
+                    reachedEnd = latestSnapshot.documents.size < PropertyCache.PAGE_SIZE
                 } else {
-                    handlePropertiesFailure(propertiesTask.exception ?: Exception("فشل غير معروف"))
+                    handlePropertiesFailure(latestTask.exception ?: Exception("فشل غير معروف"))
+                    return@addOnCompleteListener
                 }
+
+                val featuredSnapshot = featuredTask.result
+                allFeaturedProperties.clear()
+                if (featuredSnapshot != null) {
+                    allFeaturedProperties.addAll(featuredSnapshot.documents.mapNotNull { doc ->
+                        doc.toObject(Property::class.java)?.apply { id = doc.id }
+                    })
+                }
+
+                applyFilters()
             }
     }
 
-    private fun handlePropertiesSnapshot(snapshot: QuerySnapshot) {
-        if (_binding == null) return
-        allProperties = snapshot.documents.mapNotNull { doc ->
-            doc.toObject(Property::class.java)?.apply { id = doc.id }
-        }.sortedByDescending { it.createdAt }
-        applyFilters()
+    private fun loadMoreProperties() {
+        if (isLoadingMore || reachedEnd || _binding == null) return
+        val cursor = lastVisibleDoc ?: return
+
+        isLoadingMore = true
+        binding.loadMoreProgress.visibility = View.VISIBLE
+
+        db.collection("properties")
+            .whereEqualTo("status", "active")
+            .orderBy("createdAt", Query.Direction.DESCENDING)
+            .startAfter(cursor)
+            .limit(PropertyCache.PAGE_SIZE)
+            .get()
+            .addOnSuccessListener { snapshot ->
+                isLoadingMore = false
+                if (_binding == null) return@addOnSuccessListener
+                binding.loadMoreProgress.visibility = View.GONE
+
+                val newItems = snapshot.documents.mapNotNull { doc ->
+                    doc.toObject(Property::class.java)?.apply { id = doc.id }
+                }
+                allProperties.addAll(newItems)
+                lastVisibleDoc = snapshot.documents.lastOrNull() ?: lastVisibleDoc
+                reachedEnd = snapshot.documents.size < PropertyCache.PAGE_SIZE
+                applyFilters()
+            }
+            .addOnFailureListener {
+                isLoadingMore = false
+                if (_binding != null) binding.loadMoreProgress.visibility = View.GONE
+            }
     }
 
     private fun handlePropertiesFailure(e: Exception) {
@@ -194,33 +264,35 @@ class HomeFragment : Fragment() {
         binding.emptyText.text = "فشل تحميل العقارات: ${e.message}"
     }
 
+    private fun matchesCurrentFilters(p: Property, query: String): Boolean {
+        val matchesListing = when (selectedListingFilter) {
+            "sale" -> p.listingType == "sale"
+            "rent" -> p.listingType == "rent"
+            "wanted" -> false
+            else -> true
+        }
+        val matchesType = selectedTypeFilter == null || p.propertyType == selectedTypeFilter
+        val matchesSearch = query.isEmpty() ||
+            p.title.lowercase(Locale.getDefault()).contains(query) ||
+            p.district.lowercase(Locale.getDefault()).contains(query)
+        return matchesListing && matchesType && matchesSearch
+    }
+
     private fun applyFilters() {
         if (_binding == null) return
         val query = binding.searchInput.text?.toString()?.trim()?.lowercase(Locale.getDefault()).orEmpty()
 
-        val filtered = allProperties.filter { p ->
-            val matchesListing = when (selectedListingFilter) {
-                "sale" -> p.listingType == "sale"
-                "rent" -> p.listingType == "rent"
-                "wanted" -> false
-                else -> true
-            }
-            val matchesType = selectedTypeFilter == null || p.propertyType == selectedTypeFilter
-            val matchesSearch = query.isEmpty() ||
-                p.title.lowercase(Locale.getDefault()).contains(query) ||
-                p.district.lowercase(Locale.getDefault()).contains(query)
-            matchesListing && matchesType && matchesSearch
-        }
+        val filteredLatest = allProperties.filter { matchesCurrentFilters(it, query) }
+        val filteredFeatured = allFeaturedProperties.filter { matchesCurrentFilters(it, query) }
 
-        val featured = filtered.filter { it.featured }
-        featuredAdapter.updateData(featured)
-        binding.featuredCountText.text = getString(R.string.properties_available_format, featured.size)
-        binding.featuredSectionContainer.visibility = if (featured.isEmpty()) View.GONE else View.VISIBLE
+        featuredAdapter.updateData(filteredFeatured)
+        binding.featuredCountText.text = getString(R.string.properties_available_format, filteredFeatured.size)
+        binding.featuredSectionContainer.visibility = if (filteredFeatured.isEmpty()) View.GONE else View.VISIBLE
 
         adapter.updateFavorites(currentFavoriteIds)
-        adapter.updateData(filtered)
-        binding.latestCountText.text = getString(R.string.properties_available_format, filtered.size)
-        binding.emptyText.visibility = if (filtered.isEmpty()) View.VISIBLE else View.GONE
+        adapter.updateData(filteredLatest)
+        binding.latestCountText.text = getString(R.string.properties_available_format, filteredLatest.size)
+        binding.emptyText.visibility = if (filteredLatest.isEmpty() && filteredFeatured.isEmpty()) View.VISIBLE else View.GONE
     }
 
     private fun openDetails(property: Property) {
