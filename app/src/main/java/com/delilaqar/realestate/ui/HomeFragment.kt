@@ -196,28 +196,29 @@ class HomeFragment : Fragment() {
             .addOnCompleteListener {
                 if (_binding == null) return@addOnCompleteListener
 
-                favoritesTask?.result?.let { favSnapshot ->
-                    currentFavoriteIds.clear()
-                    currentFavoriteIds.addAll(favSnapshot.documents.map { it.id })
-                }
-
-                val latestSnapshot = latestTask.result
-                if (latestSnapshot != null) {
-                    allProperties.clear()
-                    allProperties.addAll(latestSnapshot.documents.mapNotNull { doc ->
-                        doc.toObject(Property::class.java)?.apply { id = doc.id }
-                    })
-                    lastVisibleDoc = latestSnapshot.documents.lastOrNull()
-                    reachedEnd = latestSnapshot.documents.size < PropertyCache.PAGE_SIZE
-                } else {
+                if (!latestTask.isSuccessful) {
                     handlePropertiesFailure(latestTask.exception ?: Exception("فشل غير معروف"))
                     return@addOnCompleteListener
                 }
 
-                val featuredSnapshot = featuredTask.result
-                allFeaturedProperties.clear()
-                if (featuredSnapshot != null) {
-                    allFeaturedProperties.addAll(featuredSnapshot.documents.mapNotNull { doc ->
+                favoritesTask?.let { task ->
+                    if (task.isSuccessful) {
+                        currentFavoriteIds.clear()
+                        currentFavoriteIds.addAll(task.result.documents.map { it.id })
+                    }
+                }
+
+                val latestSnapshot = latestTask.result
+                allProperties.clear()
+                allProperties.addAll(latestSnapshot.documents.mapNotNull { doc ->
+                    doc.toObject(Property::class.java)?.apply { id = doc.id }
+                })
+                lastVisibleDoc = latestSnapshot.documents.lastOrNull()
+                reachedEnd = latestSnapshot.documents.size < PropertyCache.PAGE_SIZE
+
+                if (featuredTask.isSuccessful) {
+                    allFeaturedProperties.clear()
+                    allFeaturedProperties.addAll(featuredTask.result.documents.mapNotNull { doc ->
                         doc.toObject(Property::class.java)?.apply { id = doc.id }
                     })
                 }
