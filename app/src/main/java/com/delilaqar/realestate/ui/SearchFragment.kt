@@ -30,6 +30,8 @@ class SearchFragment : Fragment() {
     private val currentFavoriteIds = mutableSetOf<String>()
     private var selectedCityId: String? = null
     private var sortOption: String = "newest" // newest, price_asc, price_desc
+    private val priceFilterHandler = android.os.Handler(android.os.Looper.getMainLooper())
+    private var priceFilterRunnable: Runnable? = null
 
     private val cities = linkedMapOf(
         "baghdad" to "بغداد",
@@ -126,6 +128,18 @@ class SearchFragment : Fragment() {
         binding.listingTypeFilter.setOnCheckedStateChangeListener { _, _ -> applyFilters() }
         binding.propertyTypeFilter.setOnCheckedStateChangeListener { _, _ -> applyFilters() }
         binding.bedroomsFilter.setOnCheckedStateChangeListener { _, _ -> applyFilters() }
+
+        val priceWatcher = object : TextWatcher {
+            override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) {}
+            override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) {
+                priceFilterRunnable?.let { priceFilterHandler.removeCallbacks(it) }
+                priceFilterRunnable = Runnable { applyFilters() }
+                priceFilterHandler.postDelayed(priceFilterRunnable!!, 400)
+            }
+            override fun afterTextChanged(s: Editable?) {}
+        }
+        binding.minPriceInput.addTextChangedListener(priceWatcher)
+        binding.maxPriceInput.addTextChangedListener(priceWatcher)
     }
 
     private fun loadFavoriteIdsThenProperties() {
@@ -190,6 +204,8 @@ class SearchFragment : Fragment() {
             binding.propertyTypeFilter.check(binding.filterAllType.id)
             binding.cityFilter.check(binding.filterAllCities.id)
             binding.bedroomsFilter.check(binding.filterAnyBedrooms.id)
+            binding.minPriceInput.setText("")
+            binding.maxPriceInput.setText("")
             sortOption = "newest"
             binding.sortLabel.text = "الأحدث أولاً"
             applyFilters()
@@ -226,6 +242,9 @@ class SearchFragment : Fragment() {
             else -> null
         }
 
+        val minPrice = binding.minPriceInput.text?.toString()?.trim()?.toDoubleOrNull()
+        val maxPrice = binding.maxPriceInput.text?.toString()?.trim()?.toDoubleOrNull()
+
         val filtered = allProperties.filter { property ->
             (query.isEmpty() ||
                 property.title.contains(query, ignoreCase = true) ||
@@ -233,7 +252,9 @@ class SearchFragment : Fragment() {
                 (listingType == null || property.listingType == listingType) &&
                 (propertyType == null || property.propertyType == propertyType) &&
                 (selectedCityId == null || property.cityId == selectedCityId) &&
-                (minBedrooms == null || property.bedrooms >= minBedrooms)
+                (minBedrooms == null || property.bedrooms >= minBedrooms) &&
+                (minPrice == null || property.price >= minPrice) &&
+                (maxPrice == null || property.price <= maxPrice)
         }
 
         val sorted = when (sortOption) {
