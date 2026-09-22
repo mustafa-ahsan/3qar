@@ -207,6 +207,13 @@
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:text="للإيجار" />
+
+                    <com.google.android.material.chip.Chip
+                        android:id="@+id/filterWanted"
+                        style="@style/PillChoiceChip"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="مطلوب عقار" />
                 </com.google.android.material.chip.ChipGroup>
 
                 <TextView

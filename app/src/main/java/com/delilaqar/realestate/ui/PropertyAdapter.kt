@@ -43,14 +43,22 @@ class PropertyAdapter(
 
         binding.propertyTypeBadge.text = propertyTypeLabel(property.propertyType)
 
-        if (property.listingType == "rent") {
-            binding.listingTypeBadge.text = context.getString(R.string.badge_rent)
-            binding.listingTypeBadge.backgroundTintList =
-                ColorStateList.valueOf(ContextCompat.getColor(context, R.color.accent_green))
-        } else {
-            binding.listingTypeBadge.text = context.getString(R.string.badge_sale)
-            binding.listingTypeBadge.backgroundTintList =
-                ColorStateList.valueOf(ContextCompat.getColor(context, R.color.primary_blue))
+        when (property.listingType) {
+            "rent" -> {
+                binding.listingTypeBadge.text = context.getString(R.string.badge_rent)
+                binding.listingTypeBadge.backgroundTintList =
+                    ColorStateList.valueOf(ContextCompat.getColor(context, R.color.accent_green))
+            }
+            "wanted" -> {
+                binding.listingTypeBadge.text = "مطلوب"
+                binding.listingTypeBadge.backgroundTintList =
+                    ColorStateList.valueOf(ContextCompat.getColor(context, R.color.accent_orange))
+            }
+            else -> {
+                binding.listingTypeBadge.text = context.getString(R.string.badge_sale)
+                binding.listingTypeBadge.backgroundTintList =
+                    ColorStateList.valueOf(ContextCompat.getColor(context, R.color.primary_blue))
+            }
         }
 
         val isFavorite = favoriteIds.contains(property.id)

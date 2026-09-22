@@ -58,7 +58,11 @@ class PropertyDetailFragment : Fragment() {
         binding.detailDescription.text = property.description.ifEmpty { "لا يوجد وصف" }
 
         binding.detailPropertyTypeBadge.text = propertyTypeLabel(property.propertyType)
-        binding.detailListingTypeBadge.text = if (property.listingType == "rent") "للإيجار" else "للبيع"
+        binding.detailListingTypeBadge.text = when (property.listingType) {
+            "rent" -> "للإيجار"
+            "wanted" -> "مطلوب"
+            else -> "للبيع"
+        }
 
         setupImageGallery(property.images)
 

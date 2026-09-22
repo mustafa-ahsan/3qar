@@ -220,6 +220,7 @@ class SearchFragment : Fragment() {
         val listingType = when (binding.listingTypeFilter.checkedChipId) {
             binding.filterSale.id -> "sale"
             binding.filterRent.id -> "rent"
+            binding.filterWanted.id -> "wanted"
             else -> null
         }
 

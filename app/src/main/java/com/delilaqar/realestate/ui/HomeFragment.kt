@@ -269,7 +269,7 @@ class HomeFragment : Fragment() {
         val matchesListing = when (selectedListingFilter) {
             "sale" -> p.listingType == "sale"
             "rent" -> p.listingType == "rent"
-            "wanted" -> false
+            "wanted" -> p.listingType == "wanted"
             else -> true
         }
         val matchesType = selectedTypeFilter == null || p.propertyType == selectedTypeFilter

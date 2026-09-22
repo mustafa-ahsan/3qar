@@ -140,7 +140,7 @@ class PostAdFragment : Fragment() {
 
                 cities[property.cityId]?.let { cityName -> binding.cityInput.setText(cityName, false) }
 
-                binding.listingTypeGroup.check(if (property.listingType == "rent") binding.chipRent.id else binding.chipSale.id)
+                binding.listingTypeGroup.check(when (property.listingType) { "rent" -> binding.chipRent.id; "wanted" -> binding.chipWanted.id; else -> binding.chipSale.id })
                 val typeChipId = when (property.propertyType) {
                     "villa" -> binding.chipVilla.id
                     "land" -> binding.chipLand.id
@@ -255,7 +255,13 @@ class PostAdFragment : Fragment() {
             return
         }
 
-        if (existingImageUrls.isEmpty() && newImageUris.isEmpty()) {
+        val listingType = when (binding.listingTypeGroup.checkedChipId) {
+            binding.chipRent.id -> "rent"
+            binding.chipWanted.id -> "wanted"
+            else -> "sale"
+        }
+
+        if (listingType != "wanted" && existingImageUrls.isEmpty() && newImageUris.isEmpty()) {
             showError("الرجاء اختيار صورة واحدة على الأقل")
             return
         }
@@ -283,7 +289,6 @@ class PostAdFragment : Fragment() {
         }
 
         val cityId = cities.entries.firstOrNull { it.value == cityName }?.key ?: return
-        val listingType = if (binding.listingTypeGroup.checkedChipId == binding.chipRent.id) "rent" else "sale"
         val propertyType = when (binding.propertyTypeGroup.checkedChipId) {
             binding.chipVilla.id -> "villa"
             binding.chipLand.id -> "land"
