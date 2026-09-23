@@ -3,6 +3,7 @@ package com.delilaqar.realestate.ui
 import android.content.res.ColorStateList
 import android.view.LayoutInflater
 import android.view.ViewGroup
+import android.widget.ImageView
 import androidx.core.content.ContextCompat
 import androidx.recyclerview.widget.RecyclerView
 import com.bumptech.glide.Glide
@@ -68,7 +69,14 @@ class PropertyAdapter(
 
         val imageUrl = property.images.firstOrNull()
         if (imageUrl != null) {
+            binding.propertyImage.background = null
+            binding.propertyImage.scaleType = ImageView.ScaleType.CENTER_CROP
             Glide.with(context).load(imageUrl).centerCrop().into(binding.propertyImage)
+        } else {
+            Glide.with(context).clear(binding.propertyImage)
+            binding.propertyImage.scaleType = ImageView.ScaleType.CENTER
+            binding.propertyImage.setBackgroundColor(ContextCompat.getColor(context, R.color.surface_card_light))
+            binding.propertyImage.setImageResource(R.drawable.ic_no_image)
         }
 
         binding.detailsButton.setOnClickListener { onDetailsClick(property) }

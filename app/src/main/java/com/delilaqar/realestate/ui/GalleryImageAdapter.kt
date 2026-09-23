@@ -3,6 +3,7 @@ package com.delilaqar.realestate.ui
 import android.view.LayoutInflater
 import android.view.ViewGroup
 import android.widget.ImageView
+import androidx.core.content.ContextCompat
 import androidx.recyclerview.widget.RecyclerView
 import com.bumptech.glide.Glide
 import com.delilaqar.realestate.R
@@ -22,12 +23,23 @@ class GalleryImageAdapter(
     }
 
     override fun onBindViewHolder(holder: ImageViewHolder, position: Int) {
-        holder.imageView.scaleType = if (fullscreen) ImageView.ScaleType.FIT_CENTER else ImageView.ScaleType.CENTER_CROP
+        val url = imageUrls[position]
+        val imageView = holder.imageView
+        val context = imageView.context
 
-        val glideRequest = Glide.with(holder.imageView.context).load(imageUrls[position])
-        if (fullscreen) glideRequest.into(holder.imageView) else glideRequest.centerCrop().into(holder.imageView)
+        if (url.isBlank()) {
+            Glide.with(context).clear(imageView)
+            imageView.scaleType = ImageView.ScaleType.CENTER
+            imageView.setBackgroundColor(ContextCompat.getColor(context, R.color.surface_card_light))
+            imageView.setImageResource(R.drawable.ic_no_image)
+        } else {
+            imageView.background = null
+            imageView.scaleType = if (fullscreen) ImageView.ScaleType.FIT_CENTER else ImageView.ScaleType.CENTER_CROP
+            val request = Glide.with(context).load(url)
+            if (fullscreen) request.into(imageView) else request.centerCrop().into(imageView)
+        }
 
-        holder.imageView.setOnClickListener { onImageClick?.invoke(position) }
+        imageView.setOnClickListener { onImageClick?.invoke(position) }
     }
 
     override fun getItemCount(): Int = imageUrls.size
