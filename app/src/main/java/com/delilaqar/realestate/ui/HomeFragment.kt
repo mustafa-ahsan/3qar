@@ -284,7 +284,7 @@ class HomeFragment : Fragment() {
         val query = binding.searchInput.text?.toString()?.trim()?.lowercase(Locale.getDefault()).orEmpty()
 
         val filteredLatest = allProperties.filter { matchesCurrentFilters(it, query) }
-        val filteredFeatured = allFeaturedProperties.filter { matchesCurrentFilters(it, query) }
+        val filteredFeatured = allFeaturedProperties.filter { it.listingType != "wanted" && matchesCurrentFilters(it, query) }
 
         featuredAdapter.updateData(filteredFeatured)
         binding.featuredCountText.text = getString(R.string.properties_available_format, filteredFeatured.size)

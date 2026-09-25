@@ -10,8 +10,8 @@ import com.bumptech.glide.Glide
 import com.delilaqar.realestate.R
 import com.delilaqar.realestate.data.Property
 import com.delilaqar.realestate.databinding.ItemPropertyBinding
+import com.delilaqar.realestate.databinding.ItemPropertyWantedBinding
 import com.delilaqar.realestate.util.CurrencyFormatter
-import java.util.Locale
 
 class PropertyAdapter(
     private var items: List<Property>,
@@ -19,21 +19,36 @@ class PropertyAdapter(
     private val onWhatsappClick: (Property) -> Unit,
     private val onFavoriteClick: (Property) -> Unit,
     private var favoriteIds: Set<String> = emptySet()
-) : RecyclerView.Adapter<PropertyAdapter.PropertyViewHolder>() {
+) : RecyclerView.Adapter<RecyclerView.ViewHolder>() {
 
-    inner class PropertyViewHolder(val binding: ItemPropertyBinding) :
-        RecyclerView.ViewHolder(binding.root)
-
-    override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): PropertyViewHolder {
-        val binding = ItemPropertyBinding.inflate(
-            LayoutInflater.from(parent.context), parent, false
-        )
-        return PropertyViewHolder(binding)
+    companion object {
+        private const val VIEW_TYPE_NORMAL = 0
+        private const val VIEW_TYPE_WANTED = 1
     }
 
-    override fun onBindViewHolder(holder: PropertyViewHolder, position: Int) {
+    inner class NormalViewHolder(val binding: ItemPropertyBinding) : RecyclerView.ViewHolder(binding.root)
+    inner class WantedViewHolder(val binding: ItemPropertyWantedBinding) : RecyclerView.ViewHolder(binding.root)
+
+    override fun getItemViewType(position: Int): Int =
+        if (items[position].listingType == "wanted") VIEW_TYPE_WANTED else VIEW_TYPE_NORMAL
+
+    override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): RecyclerView.ViewHolder {
+        return if (viewType == VIEW_TYPE_WANTED) {
+            WantedViewHolder(ItemPropertyWantedBinding.inflate(LayoutInflater.from(parent.context), parent, false))
+        } else {
+            NormalViewHolder(ItemPropertyBinding.inflate(LayoutInflater.from(parent.context), parent, false))
+        }
+    }
+
+    override fun onBindViewHolder(holder: RecyclerView.ViewHolder, position: Int) {
         val property = items[position]
-        val binding = holder.binding
+        when (holder) {
+            is NormalViewHolder -> bindNormal(holder.binding, property)
+            is WantedViewHolder -> bindWanted(holder.binding, property)
+        }
+    }
+
+    private fun bindNormal(binding: ItemPropertyBinding, property: Property) {
         val context = binding.root.context
 
         binding.titleText.text = property.title
@@ -44,22 +59,14 @@ class PropertyAdapter(
 
         binding.propertyTypeBadge.text = propertyTypeLabel(property.propertyType)
 
-        when (property.listingType) {
-            "rent" -> {
-                binding.listingTypeBadge.text = context.getString(R.string.badge_rent)
-                binding.listingTypeBadge.backgroundTintList =
-                    ColorStateList.valueOf(ContextCompat.getColor(context, R.color.accent_green))
-            }
-            "wanted" -> {
-                binding.listingTypeBadge.text = "مطلوب"
-                binding.listingTypeBadge.backgroundTintList =
-                    ColorStateList.valueOf(ContextCompat.getColor(context, R.color.accent_orange))
-            }
-            else -> {
-                binding.listingTypeBadge.text = context.getString(R.string.badge_sale)
-                binding.listingTypeBadge.backgroundTintList =
-                    ColorStateList.valueOf(ContextCompat.getColor(context, R.color.primary_blue))
-            }
+        if (property.listingType == "rent") {
+            binding.listingTypeBadge.text = context.getString(R.string.badge_rent)
+            binding.listingTypeBadge.backgroundTintList =
+                ColorStateList.valueOf(ContextCompat.getColor(context, R.color.accent_green))
+        } else {
+            binding.listingTypeBadge.text = context.getString(R.string.badge_sale)
+            binding.listingTypeBadge.backgroundTintList =
+                ColorStateList.valueOf(ContextCompat.getColor(context, R.color.primary_blue))
         }
 
         val isFavorite = favoriteIds.contains(property.id)
@@ -78,6 +85,33 @@ class PropertyAdapter(
             binding.propertyImage.setBackgroundColor(ContextCompat.getColor(context, R.color.surface_card_light))
             binding.propertyImage.setImageResource(R.drawable.ic_no_image)
         }
+
+        binding.detailsButton.setOnClickListener { onDetailsClick(property) }
+        binding.whatsappButton.setOnClickListener { onWhatsappClick(property) }
+        binding.favoriteIcon.setOnClickListener { onFavoriteClick(property) }
+    }
+
+    private fun bindWanted(binding: ItemPropertyWantedBinding, property: Property) {
+        val context = binding.root.context
+
+        binding.titleText.text = property.title
+        binding.priceText.text = "الميزانية: ${CurrencyFormatter.format(property.price)}"
+        binding.locationText.text = property.district
+        binding.detailsText.text =
+            "${property.bedrooms} غرف · ${property.bathrooms} حمامات · ${property.area.toInt()} م²"
+
+        binding.propertyTypeBadge.text = propertyTypeLabel(property.propertyType)
+        binding.listingTypeBadge.text = "مطلوب"
+        binding.listingTypeBadge.backgroundTintList =
+            ColorStateList.valueOf(ContextCompat.getColor(context, R.color.accent_orange))
+
+        val isFavorite = favoriteIds.contains(property.id)
+        binding.favoriteIcon.setImageResource(
+            if (isFavorite) R.drawable.ic_favorite else R.drawable.ic_favorite_outline
+        )
+        binding.favoriteIcon.setColorFilter(
+            ContextCompat.getColor(context, if (isFavorite) R.color.primary_blue else R.color.text_secondary)
+        )
 
         binding.detailsButton.setOnClickListener { onDetailsClick(property) }
         binding.whatsappButton.setOnClickListener { onWhatsappClick(property) }

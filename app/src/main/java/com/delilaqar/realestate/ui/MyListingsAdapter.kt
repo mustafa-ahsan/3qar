@@ -34,13 +34,12 @@ class MyListingsAdapter(
         val context = binding.root.context
         val imageUrl = property.images.firstOrNull()
         if (imageUrl != null) {
+            binding.listingImage.visibility = android.view.View.VISIBLE
             binding.listingImage.scaleType = ImageView.ScaleType.CENTER_CROP
             Glide.with(context).load(imageUrl).centerCrop().into(binding.listingImage)
         } else {
             Glide.with(context).clear(binding.listingImage)
-            binding.listingImage.scaleType = ImageView.ScaleType.CENTER
-            binding.listingImage.setBackgroundColor(ContextCompat.getColor(context, com.delilaqar.realestate.R.color.surface_card_light))
-            binding.listingImage.setImageResource(com.delilaqar.realestate.R.drawable.ic_no_image)
+            binding.listingImage.visibility = android.view.View.GONE
         }
 
         binding.deleteButton.setOnClickListener { onDeleteClick(property) }
