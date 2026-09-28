@@ -44,4 +44,9 @@
     <string name="upgrade_featured_confirm_whatsapp">تأكيد التحويل عبر واتساب</string>
     <string name="upgrade_qr_desc">كود QR لمحفظة زين كاش</string>
     <string name="upgrade_button_desc">ترقية إلى مميز</string>
+    <string name="admin_title">طلبات الترقية لمميز</string>
+    <string name="admin_empty_state">ماكو طلبات ترقية حالياً</string>
+    <string name="admin_approve">تفعيل</string>
+    <string name="admin_dismiss">تجاهل</string>
+    <string name="admin_panel_button">لوحة التحكم</string>
 </resources>

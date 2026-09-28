@@ -184,6 +184,15 @@
             </com.google.android.material.card.MaterialCardView>
 
             <com.google.android.material.button.MaterialButton
+                android:id="@+id/adminButton"
+                style="@style/OutlinedButtonDark"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginBottom="12dp"
+                android:text="@string/admin_panel_button"
+                android:visibility="gone" />
+
+            <com.google.android.material.button.MaterialButton
                 android:id="@+id/logoutButton"
                 style="@style/OutlinedButtonDark"
                 android:layout_width="match_parent"

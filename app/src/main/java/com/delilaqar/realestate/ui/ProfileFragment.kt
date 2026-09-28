@@ -38,6 +38,11 @@ class ProfileFragment : Fragment() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
+        if (auth.currentUser?.email == AdminFragment.ADMIN_EMAIL) {
+            binding.adminButton.visibility = View.VISIBLE
+            binding.adminButton.setOnClickListener { findNavController().navigateSafe(R.id.adminFragment, Bundle()) }
+        }
+
         val uid = auth.currentUser?.uid
         if (uid == null) {
             showLoggedOut()

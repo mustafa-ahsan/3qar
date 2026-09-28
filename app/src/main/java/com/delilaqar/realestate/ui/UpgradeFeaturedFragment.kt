@@ -58,7 +58,19 @@ class UpgradeFeaturedFragment : Fragment() {
         binding.upgradeWhatsappButton.setOnClickListener { openWhatsapp() }
     }
 
+    private fun createUpgradeRequest() {
+        if (propertyId.isEmpty()) return
+        val request = hashMapOf(
+            "propertyId" to propertyId,
+            "propertyTitle" to propertyTitle,
+            "requestedAt" to System.currentTimeMillis(),
+            "status" to "pending"
+        )
+        FirebaseFirestore.getInstance().collection("upgradeRequests").document(propertyId).set(request)
+    }
+
     private fun openWhatsapp() {
+        createUpgradeRequest()
         val message = "مرحباً، حوّلت ${CurrencyFormatter.format(PRICE_IQD)} لترقية إعلاني إلى مميز " +
             "لمدة $DURATION_DAYS أيام.\nالإعلان: $propertyTitle\nرقم الإعلان: $propertyId\n(مرفق صورة إشعار التحويل)"
         try {

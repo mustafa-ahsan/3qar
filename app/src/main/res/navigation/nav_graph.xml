@@ -111,4 +111,10 @@
             app:argType="string" />
     </fragment>
 
+    <fragment
+        android:id="@+id/adminFragment"
+        android:name="com.delilaqar.realestate.ui.AdminFragment"
+        android:label="لوحة التحكم"
+        tools:layout="@layout/fragment_admin" />
+
 </navigation>
