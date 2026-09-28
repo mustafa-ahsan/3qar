@@ -101,4 +101,14 @@
         android:label="حاسبة الأقساط"
         tools:layout="@layout/fragment_installment_calculator" />
 
+    <fragment
+        android:id="@+id/upgradeFeaturedFragment"
+        android:name="com.delilaqar.realestate.ui.UpgradeFeaturedFragment"
+        android:label="ترقية لمميز"
+        tools:layout="@layout/fragment_upgrade_featured">
+        <argument
+            android:name="propertyId"
+            app:argType="string" />
+    </fragment>
+
 </navigation>

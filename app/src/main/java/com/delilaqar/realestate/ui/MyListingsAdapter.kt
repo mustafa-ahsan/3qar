@@ -13,7 +13,8 @@ import com.delilaqar.realestate.util.CurrencyFormatter
 class MyListingsAdapter(
     private var items: List<Property>,
     private val onDeleteClick: (Property) -> Unit,
-    private val onEditClick: (Property) -> Unit
+    private val onEditClick: (Property) -> Unit,
+    private val onUpgradeClick: (Property) -> Unit
 ) : RecyclerView.Adapter<MyListingsAdapter.ViewHolder>() {
 
     inner class ViewHolder(val binding: ItemMyListingBinding) : RecyclerView.ViewHolder(binding.root)
@@ -44,6 +45,7 @@ class MyListingsAdapter(
 
         binding.deleteButton.setOnClickListener { onDeleteClick(property) }
         binding.editButton.setOnClickListener { onEditClick(property) }
+        binding.upgradeButton.setOnClickListener { onUpgradeClick(property) }
     }
 
     override fun getItemCount(): Int = items.size

@@ -37,4 +37,11 @@
     <string name="latest_section_title">أحدث العروض العقارية</string>
     <string name="featured_badge">مميز</string>
     <string name="properties_available_format">%d عقار متاح</string>
+    <string name="upgrade_featured_title">ترقية الإعلان إلى مميز</string>
+    <string name="upgrade_featured_price_format">السعر: %1$s لمدة %2$d أيام</string>
+    <string name="upgrade_featured_instructions">حوّل المبلغ بمسح كود QR أدناه من تطبيق زين كاش، أو حوّل يدوياً لرقم المحفظة الظاهر تحت الكود. بعد التحويل اضغط زر واتساب وأرسل صورة إشعار التحويل، وسيتم تفعيل الإعلان المميز بعد التأكد من وصول المبلغ.</string>
+    <string name="upgrade_featured_wallet_number">رقم المحفظة: %1$s</string>
+    <string name="upgrade_featured_confirm_whatsapp">تأكيد التحويل عبر واتساب</string>
+    <string name="upgrade_qr_desc">كود QR لمحفظة زين كاش</string>
+    <string name="upgrade_button_desc">ترقية إلى مميز</string>
 </resources>

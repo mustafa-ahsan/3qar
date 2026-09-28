@@ -89,6 +89,10 @@ class ProfileFragment : Fragment() {
             onEditClick = { property ->
                 val bundle = Bundle().apply { putString("propertyId", property.id) }
                 findNavController().navigateSafe(R.id.postAdFragment, bundle)
+            },
+            onUpgradeClick = { property ->
+                val bundle = Bundle().apply { putString("propertyId", property.id) }
+                findNavController().navigateSafe(R.id.upgradeFeaturedFragment, bundle)
             }
         )
         binding.myListingsRecyclerView.layoutManager = LinearLayoutManager(requireContext())

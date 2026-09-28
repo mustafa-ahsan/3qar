@@ -183,7 +183,7 @@ class HomeFragment : Fragment() {
 
         val featuredTask = db.collection("properties")
             .whereEqualTo("status", "active")
-            .whereEqualTo("featured", true)
+            .whereGreaterThan("featuredUntil", System.currentTimeMillis())
             .get()
 
         val favoritesTask = if (uid != null) {
