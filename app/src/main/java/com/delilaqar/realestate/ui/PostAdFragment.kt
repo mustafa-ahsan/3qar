@@ -305,6 +305,7 @@ class PostAdFragment : Fragment() {
 
         db.collection("users").document(uid).get().addOnSuccessListener { userDoc ->
             val userPhone = userDoc.getString("phone") ?: "+9647000000000"
+            val subscriptionUntil = userDoc.getLong("subscriptionUntil") ?: 0
 
             lifecycleScope.launch {
                 for ((index, uri) in urisToCheck.withIndex()) {
@@ -387,6 +388,7 @@ class PostAdFragment : Fragment() {
                         "bedrooms" to (bedroomsText.toIntOrNull() ?: 0),
                         "bathrooms" to (bathroomsText.toIntOrNull() ?: 0),
                         "area" to (areaText.toDoubleOrNull() ?: 0.0),
+                        "featuredUntil" to subscriptionUntil,
                     )
 
                     db.collection("properties").add(property)

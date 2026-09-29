@@ -38,6 +38,10 @@ class ProfileFragment : Fragment() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
+        binding.subscribeButton.setOnClickListener {
+            findNavController().navigateSafe(R.id.subscribeFragment)
+        }
+
         if (auth.currentUser?.email == AdminFragment.ADMIN_EMAIL) {
             binding.adminButton.visibility = View.VISIBLE
             binding.adminButton.setOnClickListener { findNavController().navigateSafe(R.id.adminFragment, Bundle()) }

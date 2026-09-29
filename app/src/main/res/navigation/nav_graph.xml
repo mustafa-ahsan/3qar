@@ -117,4 +117,10 @@
         android:label="لوحة التحكم"
         tools:layout="@layout/fragment_admin" />
 
+    <fragment
+        android:id="@+id/subscribeFragment"
+        android:name="com.delilaqar.realestate.ui.SubscribeFragment"
+        android:label="اشتراك مكتب عقاري"
+        tools:layout="@layout/fragment_subscribe" />
+
 </navigation>

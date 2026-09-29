@@ -50,4 +50,9 @@
     <string name="admin_approve">تفعيل</string>
     <string name="admin_dismiss">تجاهل</string>
     <string name="admin_panel_button">لوحة التحكم</string>
+    <string name="subscribe_title">اشتراك المكتب العقاري</string>
+    <string name="subscribe_description">اشترك واجعل كل إعلاناتك الحالية والجديدة مميزة تلقائياً طوال فترة الاشتراك، بدل الدفع عن كل إعلان لحاله.</string>
+    <string name="subscribe_button">اشتراك المكتب العقاري</string>
+    <string name="admin_subscriptions_title">طلبات اشتراك المكاتب</string>
+    <string name="admin_subscriptions_empty">ماكو طلبات اشتراك حالياً</string>
 </resources>

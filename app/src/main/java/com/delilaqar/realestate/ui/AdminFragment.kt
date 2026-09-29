@@ -13,12 +13,14 @@ import com.delilaqar.realestate.util.CurrencyFormatter
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.Query
+import com.google.firebase.firestore.SetOptions
 
 class AdminFragment : Fragment() {
     private var _binding: FragmentAdminBinding? = null
     private val binding get() = _binding!!
     private val db = FirebaseFirestore.getInstance()
     private lateinit var adapter: AdminRequestAdapter
+    private lateinit var subscriptionAdapter: AdminSubscriptionAdapter
 
     companion object {
         const val ADMIN_EMAIL = "apk.apk.mustafa@gmail.com"
@@ -67,6 +69,77 @@ class AdminFragment : Fragment() {
             }
 
         loadMonthlyTotal()
+
+        subscriptionAdapter = AdminSubscriptionAdapter(mutableListOf(), ::approveSubscription, ::dismissSubscription)
+        binding.subscriptionRequestsRecyclerView.layoutManager = LinearLayoutManager(requireContext())
+        binding.subscriptionRequestsRecyclerView.adapter = subscriptionAdapter
+
+        db.collection("subscriptionRequests")
+            .orderBy("requestedAt", Query.Direction.DESCENDING)
+            .addSnapshotListener { snapshot, _ ->
+                if (_binding == null || snapshot == null) return@addSnapshotListener
+                val requests = snapshot.documents.mapNotNull { doc ->
+                    val ownerId = doc.getString("ownerId") ?: return@mapNotNull null
+                    SubscriptionRequest(
+                        ownerId = ownerId,
+                        ownerName = doc.getString("ownerName") ?: "",
+                        ownerPhone = doc.getString("ownerPhone") ?: "",
+                        planLabel = doc.getString("planLabel") ?: "",
+                        durationDays = (doc.getLong("durationDays") ?: 30).toInt(),
+                        priceIqd = doc.getDouble("priceIqd") ?: 0.0,
+                        requestedAt = doc.getLong("requestedAt") ?: 0
+                    )
+                }
+                subscriptionAdapter.submitList(requests)
+                binding.subscriptionEmptyStateText.visibility = if (requests.isEmpty()) View.VISIBLE else View.GONE
+            }
+    }
+
+    private fun approveSubscription(request: SubscriptionRequest) {
+        val userRef = db.collection("users").document(request.ownerId)
+        userRef.get().addOnSuccessListener { userDoc ->
+            if (!isAdded) return@addOnSuccessListener
+            val currentSubUntil = userDoc.getLong("subscriptionUntil") ?: 0
+            val now = System.currentTimeMillis()
+            val base = maxOf(now, currentSubUntil)
+            val newSubUntil = base + request.durationDays * 24L * 3600L * 1000L
+
+            userRef.set(mapOf("subscriptionUntil" to newSubUntil), SetOptions.merge())
+                .addOnSuccessListener {
+                    db.collection("properties")
+                        .whereEqualTo("ownerId", request.ownerId)
+                        .whereEqualTo("status", "active")
+                        .get()
+                        .addOnSuccessListener { snapshot ->
+                            val batch = db.batch()
+                            for (doc in snapshot.documents) {
+                                val existing = doc.getLong("featuredUntil") ?: 0
+                                batch.update(doc.reference, "featuredUntil", maxOf(existing, newSubUntil))
+                            }
+                            batch.commit()
+                        }
+
+                    val activation = hashMapOf(
+                        "ownerId" to request.ownerId,
+                        "planLabel" to request.planLabel,
+                        "durationDays" to request.durationDays,
+                        "priceIqd" to request.priceIqd,
+                        "activatedAt" to now,
+                        "featuredUntil" to newSubUntil,
+                        "type" to "subscription"
+                    )
+                    db.collection("featuredActivations").add(activation)
+                    db.collection("subscriptionRequests").document(request.ownerId).delete()
+                    if (isAdded) Toast.makeText(requireContext(), "تم تفعيل اشتراك المكتب", Toast.LENGTH_SHORT).show()
+                }
+                .addOnFailureListener {
+                    if (isAdded) Toast.makeText(requireContext(), "فشل تفعيل الاشتراك", Toast.LENGTH_SHORT).show()
+                }
+        }
+    }
+
+    private fun dismissSubscription(request: SubscriptionRequest) {
+        db.collection("subscriptionRequests").document(request.ownerId).delete()
     }
 
     private fun loadMonthlyTotal() {
