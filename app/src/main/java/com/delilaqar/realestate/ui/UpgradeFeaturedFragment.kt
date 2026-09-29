@@ -6,9 +6,13 @@ import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.widget.TextView
 import android.widget.Toast
+import androidx.core.content.ContextCompat
 import androidx.fragment.app.Fragment
 import com.delilaqar.realestate.R
+import com.delilaqar.realestate.data.UpgradePlan
+import com.delilaqar.realestate.data.UpgradePlans
 import com.delilaqar.realestate.databinding.FragmentUpgradeFeaturedBinding
 import com.delilaqar.realestate.util.CurrencyFormatter
 import com.google.firebase.firestore.FirebaseFirestore
@@ -19,10 +23,12 @@ class UpgradeFeaturedFragment : Fragment() {
 
     private var propertyId: String = ""
     private var propertyTitle: String = ""
+    private var selectedPlan: UpgradePlan = UpgradePlans.ALL.first()
+
+    private data class PlanRow(val row: View, val label: TextView, val price: TextView)
+    private lateinit var planRows: Map<String, PlanRow>
 
     companion object {
-        const val PRICE_IQD = 2000.0
-        const val DURATION_DAYS = 3
         const val WALLET_NUMBER = "07858055717"
         const val WHATSAPP_NUMBER = "+9647824553729"
     }
@@ -39,11 +45,21 @@ class UpgradeFeaturedFragment : Fragment() {
 
         propertyId = arguments?.getString("propertyId").orEmpty()
 
-        binding.upgradePriceText.text = getString(
-            R.string.upgrade_featured_price_format,
-            CurrencyFormatter.format(PRICE_IQD),
-            DURATION_DAYS
+        planRows = mapOf(
+            "3d" to PlanRow(binding.planRow3d, binding.planLabel3d, binding.planPrice3d),
+            "7d" to PlanRow(binding.planRow7d, binding.planLabel7d, binding.planPrice7d),
+            "30d" to PlanRow(binding.planRow30d, binding.planLabel30d, binding.planPrice30d),
+            "365d" to PlanRow(binding.planRow365d, binding.planLabel365d, binding.planPrice365d)
         )
+
+        UpgradePlans.ALL.forEach { plan ->
+            val rowViews = planRows[plan.id] ?: return@forEach
+            rowViews.label.text = plan.label
+            rowViews.price.text = CurrencyFormatter.format(plan.priceIqd)
+            rowViews.row.setOnClickListener { selectPlan(plan) }
+        }
+        selectPlan(selectedPlan)
+
         binding.upgradeWalletText.text = getString(R.string.upgrade_featured_wallet_number, WALLET_NUMBER)
 
         if (propertyId.isNotEmpty()) {
@@ -58,11 +74,27 @@ class UpgradeFeaturedFragment : Fragment() {
         binding.upgradeWhatsappButton.setOnClickListener { openWhatsapp() }
     }
 
+    private fun selectPlan(plan: UpgradePlan) {
+        selectedPlan = plan
+        val context = context ?: return
+        planRows.forEach { (id, rowViews) ->
+            val isSelected = id == plan.id
+            rowViews.row.setBackgroundResource(if (isSelected) R.drawable.bg_pill_selected else R.drawable.bg_pill_unselected)
+            val color = ContextCompat.getColor(context, if (isSelected) android.R.color.white else R.color.text_primary)
+            rowViews.label.setTextColor(color)
+            rowViews.price.setTextColor(color)
+        }
+    }
+
     private fun createUpgradeRequest() {
         if (propertyId.isEmpty()) return
         val request = hashMapOf(
             "propertyId" to propertyId,
             "propertyTitle" to propertyTitle,
+            "planId" to selectedPlan.id,
+            "planLabel" to selectedPlan.label,
+            "durationDays" to selectedPlan.durationDays,
+            "priceIqd" to selectedPlan.priceIqd,
             "requestedAt" to System.currentTimeMillis(),
             "status" to "pending"
         )
@@ -71,8 +103,8 @@ class UpgradeFeaturedFragment : Fragment() {
 
     private fun openWhatsapp() {
         createUpgradeRequest()
-        val message = "مرحباً، حوّلت ${CurrencyFormatter.format(PRICE_IQD)} لترقية إعلاني إلى مميز " +
-            "لمدة $DURATION_DAYS أيام.\nالإعلان: $propertyTitle\nرقم الإعلان: $propertyId\n(مرفق صورة إشعار التحويل)"
+        val message = "مرحباً، حوّلت ${CurrencyFormatter.format(selectedPlan.priceIqd)} لترقية إعلاني إلى مميز " +
+            "لمدة ${selectedPlan.label}.\nالإعلان: $propertyTitle\nرقم الإعلان: $propertyId\n(مرفق صورة إشعار التحويل)"
         try {
             val uri = Uri.parse("https://api.whatsapp.com/send?phone=$WHATSAPP_NUMBER&text=${Uri.encode(message)}")
             startActivity(Intent(Intent.ACTION_VIEW, uri))

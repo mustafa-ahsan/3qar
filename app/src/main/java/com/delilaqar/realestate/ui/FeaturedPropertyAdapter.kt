@@ -13,7 +13,9 @@ import java.util.Locale
 
 class FeaturedPropertyAdapter(
     private var items: List<Property>,
-    private val onClick: (Property) -> Unit
+    private val onClick: (Property) -> Unit,
+    private val onUpgradeClick: (Property) -> Unit = {},
+    private var currentUserId: String? = null
 ) : RecyclerView.Adapter<FeaturedPropertyAdapter.FeaturedViewHolder>() {
 
     inner class FeaturedViewHolder(val binding: ItemPropertyFeaturedBinding) :
@@ -48,12 +50,19 @@ class FeaturedPropertyAdapter(
         }
 
         binding.root.setOnClickListener { onClick(property) }
+        binding.upgradeStar.visibility = if (property.ownerId.isNotEmpty() && property.ownerId == currentUserId) android.view.View.VISIBLE else android.view.View.GONE
+        binding.upgradeStar.setOnClickListener { onUpgradeClick(property) }
     }
 
     override fun getItemCount(): Int = items.size
 
     fun updateData(newItems: List<Property>) {
         items = newItems
+        notifyDataSetChanged()
+    }
+
+    fun setCurrentUserId(userId: String?) {
+        currentUserId = userId
         notifyDataSetChanged()
     }
 }

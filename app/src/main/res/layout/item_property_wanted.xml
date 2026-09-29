@@ -45,6 +45,15 @@
                 android:layout_height="24dp"
                 android:src="@drawable/ic_favorite_outline"
                 android:contentDescription="@string/nav_favorites" />
+
+            <ImageView
+                android:id="@+id/upgradeStar"
+                android:layout_width="22dp"
+                android:layout_height="22dp"
+                android:layout_marginStart="10dp"
+                android:src="@drawable/ic_star"
+                android:visibility="gone"
+                android:contentDescription="@string/upgrade_button_desc" />
         </LinearLayout>
 
         <TextView

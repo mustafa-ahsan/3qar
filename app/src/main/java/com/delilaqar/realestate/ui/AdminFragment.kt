@@ -49,7 +49,17 @@ class AdminFragment : Fragment() {
                 val requests = snapshot.documents.mapNotNull { doc ->
                     val propertyTitle = doc.getString("propertyTitle") ?: return@mapNotNull null
                     val requestedAt = doc.getLong("requestedAt") ?: 0
-                    UpgradeRequest(propertyId = doc.id, propertyTitle = propertyTitle, requestedAt = requestedAt)
+                    val planLabel = doc.getString("planLabel") ?: ""
+                    val durationDays = (doc.getLong("durationDays") ?: 3).toInt()
+                    val priceIqd = doc.getDouble("priceIqd") ?: 0.0
+                    UpgradeRequest(
+                        propertyId = doc.id,
+                        propertyTitle = propertyTitle,
+                        planLabel = planLabel,
+                        durationDays = durationDays,
+                        priceIqd = priceIqd,
+                        requestedAt = requestedAt
+                    )
                 }
                 adapter.submitList(requests)
                 binding.emptyStateText.visibility = if (requests.isEmpty()) View.VISIBLE else View.GONE
@@ -57,7 +67,7 @@ class AdminFragment : Fragment() {
     }
 
     private fun approveRequest(request: UpgradeRequest) {
-        val featuredUntil = System.currentTimeMillis() + UpgradeFeaturedFragment.DURATION_DAYS * 24L * 3600L * 1000L
+        val featuredUntil = System.currentTimeMillis() + request.durationDays * 24L * 3600L * 1000L
         db.collection("properties").document(request.propertyId)
             .update("featuredUntil", featuredUntil)
             .addOnSuccessListener {

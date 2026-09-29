@@ -75,7 +75,14 @@ class SearchFragment : Fragment() {
             onWhatsappClick = {
                 if (isAdded) Toast.makeText(requireContext(), "التواصل عبر واتساب قريباً", Toast.LENGTH_SHORT).show()
             },
-            onFavoriteClick = { property -> toggleFavorite(property) }
+            onFavoriteClick = { property -> toggleFavorite(property) },
+            onUpgradeClick = { property ->
+                if (isAdded) {
+                    val bundle = Bundle().apply { putString("propertyId", property.id) }
+                    findNavController().navigateSafe(R.id.upgradeFeaturedFragment, bundle)
+                }
+            },
+            currentUserId = FirebaseAuth.getInstance().currentUser?.uid
         )
         binding.searchRecyclerView.layoutDirection = View.LAYOUT_DIRECTION_RTL
         binding.searchRecyclerView.layoutManager = LinearLayoutManager(requireContext())

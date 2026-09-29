@@ -63,14 +63,18 @@ class HomeFragment : Fragment() {
             items = emptyList(),
             onDetailsClick = { property -> openDetails(property) },
             onWhatsappClick = { property -> openWhatsapp(property) },
-            onFavoriteClick = { property -> toggleFavorite(property) }
+            onFavoriteClick = { property -> toggleFavorite(property) },
+            onUpgradeClick = { property -> openUpgrade(property) },
+            currentUserId = FirebaseAuth.getInstance().currentUser?.uid
         )
         binding.propertiesRecyclerView.layoutManager = LinearLayoutManager(requireContext())
         binding.propertiesRecyclerView.adapter = adapter
 
         featuredAdapter = FeaturedPropertyAdapter(
             items = emptyList(),
-            onClick = { property -> openDetails(property) }
+            onClick = { property -> openDetails(property) },
+            onUpgradeClick = { property -> openUpgrade(property) },
+            currentUserId = FirebaseAuth.getInstance().currentUser?.uid
         )
         binding.featuredRecyclerView.layoutManager =
             LinearLayoutManager(requireContext(), RecyclerView.HORIZONTAL, false)
@@ -87,6 +91,12 @@ class HomeFragment : Fragment() {
         binding.calculatorButton.setOnClickListener {
             if (isAdded) findNavController().navigateSafe(R.id.installmentCalculatorFragment)
         }
+    }
+
+    private fun openUpgrade(property: com.delilaqar.realestate.data.Property) {
+        if (!isAdded) return
+        val bundle = Bundle().apply { putString("propertyId", property.id) }
+        findNavController().navigateSafe(R.id.upgradeFeaturedFragment, bundle)
     }
 
     private fun setupScrollPagination() {

@@ -33,6 +33,19 @@
             app:layout_constraintTop_toTopOf="@id/propertyImage"
             app:layout_constraintStart_toStartOf="@id/propertyImage" />
 
+        <ImageView
+            android:id="@+id/upgradeStar"
+            android:layout_width="32dp"
+            android:layout_height="32dp"
+            android:layout_margin="8dp"
+            android:padding="6dp"
+            android:background="@drawable/bg_star_circle"
+            android:src="@drawable/ic_star"
+            android:visibility="gone"
+            android:contentDescription="@string/upgrade_button_desc"
+            app:layout_constraintTop_toTopOf="@id/propertyImage"
+            app:layout_constraintEnd_toEndOf="@id/propertyImage" />
+
         <TextView
             android:id="@+id/priceText"
             android:layout_width="wrap_content"

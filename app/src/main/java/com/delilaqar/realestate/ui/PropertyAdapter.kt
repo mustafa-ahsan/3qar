@@ -18,7 +18,9 @@ class PropertyAdapter(
     private val onDetailsClick: (Property) -> Unit,
     private val onWhatsappClick: (Property) -> Unit,
     private val onFavoriteClick: (Property) -> Unit,
-    private var favoriteIds: Set<String> = emptySet()
+    private val onUpgradeClick: (Property) -> Unit = {},
+    private var favoriteIds: Set<String> = emptySet(),
+    private var currentUserId: String? = null
 ) : RecyclerView.Adapter<RecyclerView.ViewHolder>() {
 
     companion object {
@@ -89,6 +91,8 @@ class PropertyAdapter(
         binding.detailsButton.setOnClickListener { onDetailsClick(property) }
         binding.whatsappButton.setOnClickListener { onWhatsappClick(property) }
         binding.favoriteIcon.setOnClickListener { onFavoriteClick(property) }
+        binding.upgradeStar.visibility = if (property.ownerId.isNotEmpty() && property.ownerId == currentUserId) android.view.View.VISIBLE else android.view.View.GONE
+        binding.upgradeStar.setOnClickListener { onUpgradeClick(property) }
     }
 
     private fun bindWanted(binding: ItemPropertyWantedBinding, property: Property) {
@@ -116,6 +120,8 @@ class PropertyAdapter(
         binding.detailsButton.setOnClickListener { onDetailsClick(property) }
         binding.whatsappButton.setOnClickListener { onWhatsappClick(property) }
         binding.favoriteIcon.setOnClickListener { onFavoriteClick(property) }
+        binding.upgradeStar.visibility = if (property.ownerId.isNotEmpty() && property.ownerId == currentUserId) android.view.View.VISIBLE else android.view.View.GONE
+        binding.upgradeStar.setOnClickListener { onUpgradeClick(property) }
     }
 
     override fun getItemCount(): Int = items.size
@@ -127,6 +133,11 @@ class PropertyAdapter(
 
     fun updateFavorites(newFavorites: Set<String>) {
         favoriteIds = newFavorites
+        notifyDataSetChanged()
+    }
+
+    fun setCurrentUserId(userId: String?) {
+        currentUserId = userId
         notifyDataSetChanged()
     }
 

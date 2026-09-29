@@ -9,7 +9,10 @@ import android.view.ViewGroup
 import android.widget.ImageView
 import android.widget.Toast
 import androidx.fragment.app.Fragment
+import androidx.navigation.fragment.findNavController
 import androidx.viewpager2.widget.ViewPager2
+import com.delilaqar.realestate.R
+import com.delilaqar.realestate.util.navigateSafe
 import com.delilaqar.realestate.data.Property
 import com.delilaqar.realestate.databinding.FragmentPropertyDetailBinding
 import com.delilaqar.realestate.util.CurrencyFormatter
@@ -65,6 +68,17 @@ class PropertyDetailFragment : Fragment() {
         }
 
         setupImageGallery(property.images)
+
+        val currentUid = FirebaseAuth.getInstance().currentUser?.uid
+        if (currentUid != null && property.ownerId == currentUid) {
+            binding.upgradeStarDetail.visibility = View.VISIBLE
+            binding.upgradeStarDetail.setOnClickListener {
+                val bundle = Bundle().apply { putString("propertyId", propertyId) }
+                findNavController().navigateSafe(R.id.upgradeFeaturedFragment, bundle)
+            }
+        } else {
+            binding.upgradeStarDetail.visibility = View.GONE
+        }
 
         binding.shareButton.setOnClickListener {
             val shareText = "${property.title}\n" +
