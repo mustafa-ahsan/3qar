@@ -91,7 +91,7 @@ class PropertyAdapter(
         binding.detailsButton.setOnClickListener { onDetailsClick(property) }
         binding.whatsappButton.setOnClickListener { onWhatsappClick(property) }
         binding.favoriteIcon.setOnClickListener { onFavoriteClick(property) }
-        binding.upgradeStar.visibility = if (property.ownerId.isNotEmpty() && property.ownerId == currentUserId) android.view.View.VISIBLE else android.view.View.GONE
+        binding.upgradeStar.visibility = if (property.ownerId.isNotEmpty() && property.ownerId == currentUserId && property.status == "active") android.view.View.VISIBLE else android.view.View.GONE
         binding.upgradeStar.setOnClickListener { onUpgradeClick(property) }
     }
 
@@ -120,7 +120,7 @@ class PropertyAdapter(
         binding.detailsButton.setOnClickListener { onDetailsClick(property) }
         binding.whatsappButton.setOnClickListener { onWhatsappClick(property) }
         binding.favoriteIcon.setOnClickListener { onFavoriteClick(property) }
-        binding.upgradeStar.visibility = if (property.ownerId.isNotEmpty() && property.ownerId == currentUserId) android.view.View.VISIBLE else android.view.View.GONE
+        binding.upgradeStar.visibility = if (property.ownerId.isNotEmpty() && property.ownerId == currentUserId && property.status == "active") android.view.View.VISIBLE else android.view.View.GONE
         binding.upgradeStar.setOnClickListener { onUpgradeClick(property) }
     }
 

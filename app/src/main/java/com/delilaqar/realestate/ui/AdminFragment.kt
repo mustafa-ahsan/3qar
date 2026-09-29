@@ -9,6 +9,7 @@ import androidx.fragment.app.Fragment
 import androidx.navigation.fragment.findNavController
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.delilaqar.realestate.databinding.FragmentAdminBinding
+import com.delilaqar.realestate.util.CurrencyFormatter
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.Query
@@ -64,19 +65,58 @@ class AdminFragment : Fragment() {
                 adapter.submitList(requests)
                 binding.emptyStateText.visibility = if (requests.isEmpty()) View.VISIBLE else View.GONE
             }
+
+        loadMonthlyTotal()
+    }
+
+    private fun loadMonthlyTotal() {
+        val cal = java.util.Calendar.getInstance()
+        cal.set(java.util.Calendar.DAY_OF_MONTH, 1)
+        cal.set(java.util.Calendar.HOUR_OF_DAY, 0)
+        cal.set(java.util.Calendar.MINUTE, 0)
+        cal.set(java.util.Calendar.SECOND, 0)
+        cal.set(java.util.Calendar.MILLISECOND, 0)
+        val startOfMonth = cal.timeInMillis
+
+        db.collection("featuredActivations")
+            .whereGreaterThanOrEqualTo("activatedAt", startOfMonth)
+            .addSnapshotListener { snapshot, _ ->
+                if (_binding == null || snapshot == null) return@addSnapshotListener
+                val total = snapshot.documents.sumOf { it.getDouble("priceIqd") ?: 0.0 }
+                binding.monthlyTotalText.text = "إجمالي هذا الشهر: ${CurrencyFormatter.format(total)}"
+            }
     }
 
     private fun approveRequest(request: UpgradeRequest) {
-        val featuredUntil = System.currentTimeMillis() + request.durationDays * 24L * 3600L * 1000L
-        db.collection("properties").document(request.propertyId)
-            .update("featuredUntil", featuredUntil)
-            .addOnSuccessListener {
-                db.collection("upgradeRequests").document(request.propertyId).delete()
-                if (isAdded) Toast.makeText(requireContext(), "تم تفعيل الإعلان المميز", Toast.LENGTH_SHORT).show()
-            }
-            .addOnFailureListener {
-                if (isAdded) Toast.makeText(requireContext(), "فشل التفعيل، تأكد من رقم الإعلان", Toast.LENGTH_SHORT).show()
-            }
+        val propertyRef = db.collection("properties").document(request.propertyId)
+        propertyRef.get().addOnSuccessListener { doc ->
+            if (!isAdded) return@addOnSuccessListener
+            val currentFeaturedUntil = doc.getLong("featuredUntil") ?: 0
+            val now = System.currentTimeMillis()
+            val base = maxOf(now, currentFeaturedUntil)
+            val featuredUntil = base + request.durationDays * 24L * 3600L * 1000L
+
+            propertyRef.update("featuredUntil", featuredUntil)
+                .addOnSuccessListener {
+                    val activation = hashMapOf(
+                        "propertyId" to request.propertyId,
+                        "propertyTitle" to request.propertyTitle,
+                        "planLabel" to request.planLabel,
+                        "durationDays" to request.durationDays,
+                        "priceIqd" to request.priceIqd,
+                        "activatedAt" to now,
+                        "featuredUntil" to featuredUntil
+                    )
+                    db.collection("featuredActivations").add(activation)
+                    db.collection("upgradeRequests").document(request.propertyId).delete()
+                    if (isAdded) Toast.makeText(requireContext(), "تم تفعيل الإعلان المميز", Toast.LENGTH_SHORT).show()
+                }
+                .addOnFailureListener {
+                    if (isAdded) Toast.makeText(requireContext(), "فشل التفعيل، تأكد من رقم الإعلان", Toast.LENGTH_SHORT).show()
+                }
+        }.addOnFailureListener {
+            if (isAdded) Toast.makeText(requireContext(), "فشل تحميل بيانات الإعلان", Toast.LENGTH_SHORT).show()
+        }
     }
 
     private fun dismissRequest(request: UpgradeRequest) {

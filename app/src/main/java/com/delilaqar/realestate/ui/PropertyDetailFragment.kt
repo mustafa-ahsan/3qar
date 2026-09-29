@@ -70,7 +70,7 @@ class PropertyDetailFragment : Fragment() {
         setupImageGallery(property.images)
 
         val currentUid = FirebaseAuth.getInstance().currentUser?.uid
-        if (currentUid != null && property.ownerId == currentUid) {
+        if (currentUid != null && property.ownerId == currentUid && property.status == "active") {
             binding.upgradeStarDetail.visibility = View.VISIBLE
             binding.upgradeStarDetail.setOnClickListener {
                 val bundle = Bundle().apply { putString("propertyId", propertyId) }

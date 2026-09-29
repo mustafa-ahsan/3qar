@@ -50,7 +50,7 @@ class FeaturedPropertyAdapter(
         }
 
         binding.root.setOnClickListener { onClick(property) }
-        binding.upgradeStar.visibility = if (property.ownerId.isNotEmpty() && property.ownerId == currentUserId) android.view.View.VISIBLE else android.view.View.GONE
+        binding.upgradeStar.visibility = if (property.ownerId.isNotEmpty() && property.ownerId == currentUserId && property.status == "active") android.view.View.VISIBLE else android.view.View.GONE
         binding.upgradeStar.setOnClickListener { onUpgradeClick(property) }
     }
 

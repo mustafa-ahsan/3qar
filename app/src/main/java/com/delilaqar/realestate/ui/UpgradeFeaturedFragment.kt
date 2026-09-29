@@ -15,6 +15,7 @@ import com.delilaqar.realestate.data.UpgradePlan
 import com.delilaqar.realestate.data.UpgradePlans
 import com.delilaqar.realestate.databinding.FragmentUpgradeFeaturedBinding
 import com.delilaqar.realestate.util.CurrencyFormatter
+import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
 
 class UpgradeFeaturedFragment : Fragment() {
@@ -91,6 +92,7 @@ class UpgradeFeaturedFragment : Fragment() {
         val request = hashMapOf(
             "propertyId" to propertyId,
             "propertyTitle" to propertyTitle,
+            "ownerId" to (FirebaseAuth.getInstance().currentUser?.uid ?: ""),
             "planId" to selectedPlan.id,
             "planLabel" to selectedPlan.label,
             "durationDays" to selectedPlan.durationDays,

@@ -17,6 +17,8 @@ class MyListingsAdapter(
     private val onUpgradeClick: (Property) -> Unit
 ) : RecyclerView.Adapter<MyListingsAdapter.ViewHolder>() {
 
+    private var pendingRequestIds: Set<String> = emptySet()
+
     inner class ViewHolder(val binding: ItemMyListingBinding) : RecyclerView.ViewHolder(binding.root)
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ViewHolder {
@@ -30,7 +32,18 @@ class MyListingsAdapter(
 
         binding.listingTitle.text = property.title
         binding.listingPrice.text = CurrencyFormatter.format(property.price)
-        binding.listingStatus.text = if (property.status == "active") "نشط" else "غير نشط"
+        val now = System.currentTimeMillis()
+        val baseStatus = if (property.status == "active") "نشط" else "غير نشط"
+        val extraStatus = when {
+            property.featuredUntil > now -> {
+                val daysLeft = kotlin.math.ceil((property.featuredUntil - now) / 86400000.0).toInt()
+                "  •  ⭐ مميز، يبقى $daysLeft ${if (daysLeft == 1) "يوم" else "أيام"}"
+            }
+            pendingRequestIds.contains(property.id) -> "  •  ⏳ طلبك قيد المراجعة"
+            else -> ""
+        }
+        binding.listingStatus.text = baseStatus + extraStatus
+        binding.upgradeButton.visibility = if (property.status == "active") android.view.View.VISIBLE else android.view.View.GONE
 
         val context = binding.root.context
         val imageUrl = property.images.firstOrNull()
@@ -52,6 +65,11 @@ class MyListingsAdapter(
 
     fun updateData(newItems: List<Property>) {
         items = newItems
+        notifyDataSetChanged()
+    }
+
+    fun updatePendingRequests(newIds: Set<String>) {
+        pendingRequestIds = newIds
         notifyDataSetChanged()
     }
 }

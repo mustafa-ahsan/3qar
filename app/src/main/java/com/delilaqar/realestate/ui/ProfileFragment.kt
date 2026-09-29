@@ -104,6 +104,7 @@ class ProfileFragment : Fragment() {
         binding.myListingsRecyclerView.adapter = myListingsAdapter
 
         loadMyListings(uid)
+        listenForPendingUpgradeRequests(uid)
         setupModelStatus()
     }
 
@@ -155,6 +156,15 @@ class ProfileFragment : Fragment() {
         statusRunnable?.let { statusHandler.removeCallbacks(it) }
         statusRunnable = Runnable { refreshModelStatus() }
         statusHandler.postDelayed(statusRunnable!!, nextDelay)
+    }
+
+    private fun listenForPendingUpgradeRequests(uid: String) {
+        db.collection("upgradeRequests")
+            .whereEqualTo("ownerId", uid)
+            .addSnapshotListener { snapshot, _ ->
+                if (_binding == null || snapshot == null) return@addSnapshotListener
+                myListingsAdapter.updatePendingRequests(snapshot.documents.map { it.id }.toSet())
+            }
     }
 
     private fun loadMyListings(uid: String) {
