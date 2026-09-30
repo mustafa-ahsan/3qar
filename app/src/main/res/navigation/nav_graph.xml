@@ -123,4 +123,20 @@
         android:label="اشتراك مكتب عقاري"
         tools:layout="@layout/fragment_subscribe" />
 
+    <fragment
+        android:id="@+id/officeProfileFragment"
+        android:name="com.delilaqar.realestate.ui.OfficeProfileFragment"
+        android:label="صفحة المكتب"
+        tools:layout="@layout/fragment_office_profile">
+        <argument
+            android:name="ownerId"
+            app:argType="string" />
+    </fragment>
+
+    <fragment
+        android:id="@+id/topOfficesFragment"
+        android:name="com.delilaqar.realestate.ui.TopOfficesFragment"
+        android:label="أكثر المكاتب نشاطاً"
+        tools:layout="@layout/fragment_top_offices" />
+
 </navigation>

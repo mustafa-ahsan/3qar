@@ -80,6 +80,18 @@ class PropertyDetailFragment : Fragment() {
             binding.upgradeStarDetail.visibility = View.GONE
         }
 
+        if (property.verifiedUntil > System.currentTimeMillis()) {
+            binding.detailVerifiedBadge.visibility = View.VISIBLE
+            binding.viewOfficeListingsText.visibility = View.VISIBLE
+            binding.viewOfficeListingsText.setOnClickListener {
+                val bundle = Bundle().apply { putString("ownerId", property.ownerId) }
+                findNavController().navigateSafe(R.id.officeProfileFragment, bundle)
+            }
+        } else {
+            binding.detailVerifiedBadge.visibility = View.GONE
+            binding.viewOfficeListingsText.visibility = View.GONE
+        }
+
         binding.shareButton.setOnClickListener {
             val shareText = "${property.title}\n" +
                 "السعر: ${CurrencyFormatter.format(property.price)}\n" +

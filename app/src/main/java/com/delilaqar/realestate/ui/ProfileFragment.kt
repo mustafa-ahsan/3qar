@@ -42,6 +42,10 @@ class ProfileFragment : Fragment() {
             findNavController().navigateSafe(R.id.subscribeFragment)
         }
 
+        binding.topOfficesButton.setOnClickListener {
+            findNavController().navigateSafe(R.id.topOfficesFragment)
+        }
+
         if (auth.currentUser?.email == AdminFragment.ADMIN_EMAIL) {
             binding.adminButton.visibility = View.VISIBLE
             binding.adminButton.setOnClickListener { findNavController().navigateSafe(R.id.adminFragment, Bundle()) }

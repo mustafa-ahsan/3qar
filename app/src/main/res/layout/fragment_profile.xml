@@ -184,6 +184,14 @@
             </com.google.android.material.card.MaterialCardView>
 
             <com.google.android.material.button.MaterialButton
+                android:id="@+id/topOfficesButton"
+                style="@style/OutlinedButtonDark"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginBottom="12dp"
+                android:text="@string/top_offices_button" />
+
+            <com.google.android.material.button.MaterialButton
                 android:id="@+id/subscribeButton"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"

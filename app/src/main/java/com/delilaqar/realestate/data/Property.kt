@@ -17,6 +17,7 @@ data class Property(
     var ownerId: String = "",
     var featured: Boolean = false,
     var featuredUntil: Long = 0,
+    var verifiedUntil: Long = 0,
     var status: String = "active",
     var reportedBy: List<String> = emptyList(),
     var phoneNumber: String = "",

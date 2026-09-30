@@ -113,8 +113,15 @@ class AdminFragment : Fragment() {
                         .addOnSuccessListener { snapshot ->
                             val batch = db.batch()
                             for (doc in snapshot.documents) {
-                                val existing = doc.getLong("featuredUntil") ?: 0
-                                batch.update(doc.reference, "featuredUntil", maxOf(existing, newSubUntil))
+                                val existingFeatured = doc.getLong("featuredUntil") ?: 0
+                                val existingVerified = doc.getLong("verifiedUntil") ?: 0
+                                batch.update(
+                                    doc.reference,
+                                    mapOf(
+                                        "featuredUntil" to maxOf(existingFeatured, newSubUntil),
+                                        "verifiedUntil" to maxOf(existingVerified, newSubUntil)
+                                    )
+                                )
                             }
                             batch.commit()
                         }

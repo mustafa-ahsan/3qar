@@ -389,6 +389,7 @@ class PostAdFragment : Fragment() {
                         "bathrooms" to (bathroomsText.toIntOrNull() ?: 0),
                         "area" to (areaText.toDoubleOrNull() ?: 0.0),
                         "featuredUntil" to subscriptionUntil,
+                        "verifiedUntil" to subscriptionUntil,
                     )
 
                     db.collection("properties").add(property)

@@ -228,9 +228,10 @@ class HomeFragment : Fragment() {
 
                 if (featuredTask.isSuccessful) {
                     allFeaturedProperties.clear()
-                    allFeaturedProperties.addAll(featuredTask.result.documents.mapNotNull { doc ->
+                    val featuredList = featuredTask.result.documents.mapNotNull { doc ->
                         doc.toObject(Property::class.java)?.apply { id = doc.id }
-                    })
+                    }
+                    allFeaturedProperties.addAll(featuredList.sortedByDescending { it.verifiedUntil })
                 }
 
                 applyFilters()

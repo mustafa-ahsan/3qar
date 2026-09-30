@@ -55,4 +55,9 @@
     <string name="subscribe_button">اشتراك المكتب العقاري</string>
     <string name="admin_subscriptions_title">طلبات اشتراك المكاتب</string>
     <string name="admin_subscriptions_empty">ماكو طلبات اشتراك حالياً</string>
+    <string name="verified_badge_text">✓ موثّق</string>
+    <string name="view_office_listings">عرض كل إعلانات هذا المكتب</string>
+    <string name="top_offices_title">أكثر المكاتب نشاطاً</string>
+    <string name="top_offices_empty">ماكو بيانات كافية بعد</string>
+    <string name="top_offices_button">🏆 أكثر المكاتب نشاطاً</string>
 </resources>
