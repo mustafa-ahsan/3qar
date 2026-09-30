@@ -18,4 +18,5 @@ object UpgradePlans {
         UpgradePlan("acc_30d", "اشتراك شهري", 30, 25000.0),
         UpgradePlan("acc_365d", "اشتراك سنوي", 365, 240000.0)
     )
+    val BUMP = UpgradePlan("bump", "تحديث الإعلان لأعلى القائمة", 0, 1000.0)
 }

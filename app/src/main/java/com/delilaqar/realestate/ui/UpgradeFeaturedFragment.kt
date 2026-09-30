@@ -50,10 +50,11 @@ class UpgradeFeaturedFragment : Fragment() {
             "3d" to PlanRow(binding.planRow3d, binding.planLabel3d, binding.planPrice3d),
             "7d" to PlanRow(binding.planRow7d, binding.planLabel7d, binding.planPrice7d),
             "30d" to PlanRow(binding.planRow30d, binding.planLabel30d, binding.planPrice30d),
-            "365d" to PlanRow(binding.planRow365d, binding.planLabel365d, binding.planPrice365d)
+            "365d" to PlanRow(binding.planRow365d, binding.planLabel365d, binding.planPrice365d),
+            "bump" to PlanRow(binding.planRowBump, binding.planLabelBump, binding.planPriceBump)
         )
 
-        UpgradePlans.LISTING.forEach { plan ->
+        (UpgradePlans.LISTING + UpgradePlans.BUMP).forEach { plan ->
             val rowViews = planRows[plan.id] ?: return@forEach
             rowViews.label.text = plan.label
             rowViews.price.text = CurrencyFormatter.format(plan.priceIqd)
@@ -105,8 +106,13 @@ class UpgradeFeaturedFragment : Fragment() {
 
     private fun openWhatsapp() {
         createUpgradeRequest()
-        val message = "مرحباً، حوّلت ${CurrencyFormatter.format(selectedPlan.priceIqd)} لترقية إعلاني إلى مميز " +
-            "لمدة ${selectedPlan.label}.\nالإعلان: $propertyTitle\nرقم الإعلان: $propertyId\n(مرفق صورة إشعار التحويل)"
+        val message = if (selectedPlan.durationDays > 0) {
+            "مرحباً، حوّلت ${CurrencyFormatter.format(selectedPlan.priceIqd)} لترقية إعلاني إلى مميز " +
+                "لمدة ${selectedPlan.label}.\nالإعلان: $propertyTitle\nرقم الإعلان: $propertyId\n(مرفق صورة إشعار التحويل)"
+        } else {
+            "مرحباً، حوّلت ${CurrencyFormatter.format(selectedPlan.priceIqd)} مقابل \"${selectedPlan.label}\".\n" +
+                "الإعلان: $propertyTitle\nرقم الإعلان: $propertyId\n(مرفق صورة إشعار التحويل)"
+        }
         try {
             val uri = Uri.parse("https://api.whatsapp.com/send?phone=$WHATSAPP_NUMBER&text=${Uri.encode(message)}")
             startActivity(Intent(Intent.ACTION_VIEW, uri))

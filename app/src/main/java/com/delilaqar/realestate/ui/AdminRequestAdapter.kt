@@ -12,6 +12,7 @@ import java.util.Locale
 data class UpgradeRequest(
     val propertyId: String = "",
     val propertyTitle: String = "",
+    val planId: String = "",
     val planLabel: String = "",
     val durationDays: Int = 0,
     val priceIqd: Double = 0.0,

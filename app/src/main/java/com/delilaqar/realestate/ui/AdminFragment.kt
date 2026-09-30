@@ -52,12 +52,14 @@ class AdminFragment : Fragment() {
                 val requests = snapshot.documents.mapNotNull { doc ->
                     val propertyTitle = doc.getString("propertyTitle") ?: return@mapNotNull null
                     val requestedAt = doc.getLong("requestedAt") ?: 0
+                    val planId = doc.getString("planId") ?: ""
                     val planLabel = doc.getString("planLabel") ?: ""
                     val durationDays = (doc.getLong("durationDays") ?: 3).toInt()
                     val priceIqd = doc.getDouble("priceIqd") ?: 0.0
                     UpgradeRequest(
                         propertyId = doc.id,
                         propertyTitle = propertyTitle,
+                        planId = planId,
                         planLabel = planLabel,
                         durationDays = durationDays,
                         priceIqd = priceIqd,
@@ -169,6 +171,29 @@ class AdminFragment : Fragment() {
 
     private fun approveRequest(request: UpgradeRequest) {
         val propertyRef = db.collection("properties").document(request.propertyId)
+
+        if (request.planId == "bump") {
+            val now = System.currentTimeMillis()
+            propertyRef.update("createdAt", now)
+                .addOnSuccessListener {
+                    val activation = hashMapOf(
+                        "propertyId" to request.propertyId,
+                        "propertyTitle" to request.propertyTitle,
+                        "planLabel" to request.planLabel,
+                        "priceIqd" to request.priceIqd,
+                        "activatedAt" to now,
+                        "type" to "bump"
+                    )
+                    db.collection("featuredActivations").add(activation)
+                    db.collection("upgradeRequests").document(request.propertyId).delete()
+                    if (isAdded) Toast.makeText(requireContext(), "تم تحديث الإعلان لأعلى القائمة", Toast.LENGTH_SHORT).show()
+                }
+                .addOnFailureListener {
+                    if (isAdded) Toast.makeText(requireContext(), "فشل التحديث، تأكد من رقم الإعلان", Toast.LENGTH_SHORT).show()
+                }
+            return
+        }
+
         propertyRef.get().addOnSuccessListener { doc ->
             if (!isAdded) return@addOnSuccessListener
             val currentFeaturedUntil = doc.getLong("featuredUntil") ?: 0

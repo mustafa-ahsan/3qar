@@ -228,10 +228,15 @@ class HomeFragment : Fragment() {
 
                 if (featuredTask.isSuccessful) {
                     allFeaturedProperties.clear()
+                    val now2 = System.currentTimeMillis()
                     val featuredList = featuredTask.result.documents.mapNotNull { doc ->
                         doc.toObject(Property::class.java)?.apply { id = doc.id }
                     }
-                    allFeaturedProperties.addAll(featuredList.sortedByDescending { it.verifiedUntil })
+                    val featuredCap = 10
+                    val rotated = featuredList
+                        .sortedByDescending { p -> (if (p.verifiedUntil > now2) 2.0 else 1.0) * kotlin.random.Random.nextDouble() }
+                        .take(featuredCap)
+                    allFeaturedProperties.addAll(rotated)
                 }
 
                 applyFilters()
