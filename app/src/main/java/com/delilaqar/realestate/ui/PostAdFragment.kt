@@ -103,6 +103,11 @@ class PostAdFragment : Fragment() {
                 PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageOnly)
             )
         }
+
+        binding.listingTypeGroup.setOnCheckedChangeListener { _, checkedId ->
+            binding.imagesSectionCard.visibility =
+                if (checkedId == binding.chipWanted.id) View.GONE else View.VISIBLE
+        }
         binding.submitButton.setOnSingleClickListener { submitAd() }
 
         NsfwModelManager.startBackgroundDownload(requireContext())
