@@ -46,6 +46,11 @@ class ProfileFragment : Fragment() {
             findNavController().navigateSafe(R.id.topOfficesFragment)
         }
 
+        binding.instagramButton.setOnClickListener {
+            val uri = android.net.Uri.parse("https://instagram.com/6tf.0")
+            startActivity(android.content.Intent(android.content.Intent.ACTION_VIEW, uri))
+        }
+
         if (auth.currentUser?.email == AdminFragment.ADMIN_EMAIL) {
             binding.adminButton.visibility = View.VISIBLE
             binding.adminButton.setOnClickListener { findNavController().navigateSafe(R.id.adminFragment, Bundle()) }
